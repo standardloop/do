@@ -11,7 +11,7 @@ enum DoTokenType
     DoTokenInclude,
     DoTokenOpenCurlyBrace,
     DoTokenCloseCurlyBrace,
-    DoTokenDoubleQuotesChar,
+    DoTokenDoubleQuotes,
     DoTokenOpenBracket,
     DoTokenCloseBracket,
     DoTokenSemiColon,

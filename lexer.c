@@ -23,13 +23,13 @@ typedef struct
 static const KEY_WORD KEY_WORDS[] = {
     {.literal = "include", .type = DoTokenInclude},
     {.literal = "namespace", .type = DoTokenNamespace},
+    {.literal = "status", .type = DoTokenStatus},
+    {.literal = "cmds", .type = DoTokenCmds},
+    {.literal = "flags", .type = DoTokenFlags},
+    {.literal = "deps", .type = DoTokenDeps},
     {.literal = "task", .type = DoTokenTask},
     {.literal = "vars", .type = DoTokenVars},
     {.literal = "env", .type = DoTokenEnv},
-    {.literal = "flags", .type = DoTokenFlags},
-    {.literal = "deps", .type = DoTokenDeps},
-    {.literal = "cmds", .type = DoTokenCmds},
-    {.literal = "status", .type = DoTokenStatus},
 };
 
 static const int KEY_WORDS_SIZE = sizeof(KEY_WORDS) / sizeof(KEY_WORDS[0]);
@@ -152,7 +152,8 @@ static char *parseLiteralOrKeyword(DoLexer *lexer)
     {
         // printf("%c", lexer->current_char);
         if (lexer->current_char == NULL_CHAR || lexer->current_char == NEWLINE_CHAR ||
-            lexer->current_char == SPACE_CHAR || lexer->current_char == DOUBLE_QUOTES_CHAR)
+            lexer->current_char == SPACE_CHAR || lexer->current_char == DOUBLE_QUOTES_CHAR ||
+            lexer->current_char == '(' || lexer->current_char == ')')
         {
             break;
         }
@@ -188,11 +189,11 @@ extern DoToken *DoLex(DoLexer *lexer)
     }
     else if (lexer->current_char == CURLY_CLOSE_CHAR)
     {
-        token = NewDoToken(DoTokenOpenCurlyBrace, curr_pos, lexer->position + 1, lexer->line, "}");
+        token = NewDoToken(DoTokenCloseCurlyBrace, curr_pos, lexer->position + 1, lexer->line, "}");
     }
     else if (lexer->current_char == BRACKET_OPEN_CHAR)
     {
-        token = NewDoToken(DoTokenCloseBracket, curr_pos, lexer->position + 1, lexer->line, "[");
+        token = NewDoToken(DoTokenOpenBracket, curr_pos, lexer->position + 1, lexer->line, "[");
     }
     else if (lexer->current_char == BRACKET_CLOSE_CHAR)
     {
@@ -200,15 +201,15 @@ extern DoToken *DoLex(DoLexer *lexer)
     }
     else if (lexer->current_char == '(')
     {
-        token = NewDoToken(DoTokenTab, curr_pos, lexer->position + 1, lexer->line, "(");
+        token = NewDoToken(DoTokenOpenParentheses, curr_pos, lexer->position + 1, lexer->line, "(");
     }
     else if (lexer->current_char == ')')
     {
-        token = NewDoToken(DoTokenTab, curr_pos, lexer->position + 1, lexer->line, ")");
+        token = NewDoToken(DoTokenCloseParentheses, curr_pos, lexer->position + 1, lexer->line, ")");
     }
     else if (lexer->current_char == DOUBLE_QUOTES_CHAR)
     {
-        token = NewDoToken(DoTokenDoubleQuotesChar, curr_pos, lexer->position + 1, lexer->line, "\"");
+        token = NewDoToken(DoTokenDoubleQuotes, curr_pos, lexer->position + 1, lexer->line, "\"");
     }
     else if (lexer->current_char == SPACE_CHAR)
     {
@@ -216,6 +217,7 @@ extern DoToken *DoLex(DoLexer *lexer)
     }
     else if (lexer->current_char == NEWLINE_CHAR)
     {
+        lexer->line++;
         token = NewDoToken(DoTokenNewline, curr_pos, lexer->position + 1, lexer->line, "\n");
     }
     else if (lexer->current_char == TAB_CHAR)
@@ -225,6 +227,10 @@ extern DoToken *DoLex(DoLexer *lexer)
     else if (lexer->current_char == COMMA_CHAR)
     {
         token = NewDoToken(DoTokenComma, curr_pos, lexer->position + 1, lexer->line, ",");
+    }
+    else if (lexer->current_char == EQUAL_CHAR)
+    {
+        token = NewDoToken(DoTokenEqualsSign, curr_pos, lexer->position + 1, lexer->line, "=");
     }
     // handle any words?
     else if (isalpha(lexer->current_char))
@@ -237,13 +243,19 @@ extern DoToken *DoLex(DoLexer *lexer)
         }
         else
         {
+            bool is_keyword = false;
             for (int i = 0; i < KEY_WORDS_SIZE; i++)
             {
                 if (strcmp(literal_or_keyword, KEY_WORDS[i].literal) == 0)
                 {
                     token = NewDoToken(KEY_WORDS[i].type, curr_pos, lexer->position + 1, lexer->line, literal_or_keyword);
+                    is_keyword = true;
                     break;
                 }
+            }
+            if (!is_keyword)
+            {
+                token = NewDoToken(DoTokenString, curr_pos, lexer->position + 1, lexer->line, literal_or_keyword);
             }
         }
     }
@@ -289,8 +301,8 @@ extern void PrintDoToken(DoToken *token, bool print_literal)
     case DoTokenCloseCurlyBrace:
         printf("DoTokenCloseCurlyBrace\n");
         break;
-    case DoTokenDoubleQuotesChar:
-        printf("DoTokenDoubleQuotesChar\n");
+    case DoTokenDoubleQuotes:
+        printf("DoTokenDoubleQuotes\n");
         break;
     case DoTokenOpenBracket:
         printf("DoTokenOpenBracket\n");
@@ -360,22 +372,23 @@ extern void PrintDoToken(DoToken *token, bool print_literal)
         break;
     }
 
-    // if (print_literal && token->type != DoTokenIllegal && token->type != DoTokenEOF)
-    // {
-    //     if (token->type == DoTokenString)
-    //     {
-    //         printf("Literal: \"%s\"\n", token->literal);
-    //     }
-    //     else
-    //     {
-    //         printf("Literal: %s\n", token->literal);
-    //     }
-    // }
-    // else
-    // {
-    //     printf("\n");
-    // }
-    printf("\n");
+    if (print_literal && token->type != DoTokenIllegal && token->type != DoTokenEOF)
+    {
+        printf("Literal: %s\n", token->literal);
+        // if (token->type == DoTokenString)
+        // {
+        //     printf("Literal: \"%s\"\n", token->literal);
+        // }
+        // else
+        // {
+        //     printf("Literal: %s\n", token->literal);
+        // }
+    }
+    else
+    {
+        printf("\n");
+    }
+    // printf("\n");
 }
 
 extern void DoLexerDebugTest(char *input_str, bool exit_after)
@@ -429,13 +442,14 @@ extern void FreeDoToken(DoToken *token)
         return;
     }
 
-    // if (token->type == DoTokenString || token->type == DoTokenNumber ||
-    //     token->type == DoTokenBool || token->type == DoTokenNULL)
-    // {
-    //     if (token->literal != NULL)
-    //     {
-    //         free(token->literal);
-    //     }
-    // }
+    if (token->type == DoTokenInclude || token->type == DoTokenNamespace || token->type == DoTokenStatus ||
+        token->type == DoTokenCmds || token->type == DoTokenFlags || token->type == DoTokenDeps ||
+        token->type == DoTokenTask || token->type == DoTokenEnv || token->type == DoTokenVars || token->type == DoTokenString)
+    {
+        if (token->literal != NULL)
+        {
+            free(token->literal);
+        }
+    }
     free(token);
 }

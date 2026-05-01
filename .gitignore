@@ -58,3 +58,4 @@ dkms.conf
 do
 do-sanitize
 .task
+*.txt

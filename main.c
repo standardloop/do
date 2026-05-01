@@ -8,7 +8,7 @@ int main()
     char *buffer = ReadFile("./main.do");
     // printf("%s", buffer);
     // exit(1);
-    DoLexerDebugTest(buffer, true);
+    DoLexerDebugTest(buffer, false);
 
     free(buffer);
     return 0;

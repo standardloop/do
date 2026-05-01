@@ -102,7 +102,7 @@ tasks:
 
   sanitize:
     deps:
-      - run:sanitize
+      - build:sanitize
 
   build:sanitize:
     run: once
@@ -150,3 +150,7 @@ tasks:
       - rm -f libstandardloop-logger.dylib
       - rm -f libstandardloop-json.dylib
       - rm -f libstandardloop-util.dylib
+
+  leaks:run:
+    cmds:
+      - leaks --atExit -- ./do
