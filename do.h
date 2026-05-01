@@ -5,6 +5,48 @@
 
 extern char *ReadFile(char *);
 
+typedef struct
+{
+
+} DoFlags;
+
+typedef struct
+{
+
+} DoVars;
+
+typedef struct
+{
+
+} DoEnv;
+
+typedef struct
+{
+
+} DoTask;
+
+typedef struct
+{
+    int config;
+    DoTask *tasks;
+    DoFlags *flags;
+    DoVars *vars;
+    DoEnv *envs;
+} DoNamespace;
+
+typedef struct
+{
+    char *path;
+    bool is_remote;
+} DoIncludes;
+
+typedef struct
+{
+    DoIncludes *includes;
+    DoNamespace *namespaces;
+} Do;
+
+// ————————— LEXER START —————————
 enum DoTokenType
 {
     DoTokenEOF,
@@ -65,8 +107,27 @@ extern DoToken *NewDoToken(enum DoTokenType, u_int32_t, u_int32_t, u_int32_t, ch
 
 extern void DoLexerDebugTest(char *, bool);
 
+// ————————— LEXER END —————————
+
+// ————————— PARSER START —————————
+
 typedef struct
 {
-} Do;
+    DoLexer *lexer;
+    DoToken *current_token;
+    DoToken *peek_token;
+    bool input_error;
+    bool memory_error;
+    char *error_message;
+    int64_t list_nested;
+    int64_t obj_nested;
+} DoParser;
 
+extern DoParser *DoParserInit(DoLexer *);
+extern void PrintDoParserError(DoParser *);
+extern void FreeDoParser(DoParser *);
+extern void PrintDoParserErrorLine(DoParser *);
+extern Do *ParseDo(DoParser *);
+
+// ————————— PARSER END —————————
 #endif

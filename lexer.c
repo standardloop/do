@@ -93,8 +93,6 @@ extern DoLexer *DoLexerInit(char *input)
 
     advanceChar(lexer);
 
-    // Log(FATAL, "after advanceChar");
-
     return lexer;
 }
 
@@ -233,7 +231,8 @@ extern DoToken *DoLex(DoLexer *lexer)
         token = NewDoToken(DoTokenEqualsSign, curr_pos, lexer->position + 1, lexer->line, "=");
     }
     // handle any words?
-    else if (isalpha(lexer->current_char))
+    else
+    // else if (isalpha(lexer->current_char))
     {
         char *literal_or_keyword = parseLiteralOrKeyword(lexer);
 
@@ -253,12 +252,20 @@ extern DoToken *DoLex(DoLexer *lexer)
                     break;
                 }
             }
-            if (!is_keyword)
+            if (is_keyword && token == NULL)
+            {
+                token = NewDoToken(DoTokenIllegal, curr_pos, lexer->position + 1, lexer->line, NULL);
+            }
+            else if (!is_keyword)
             {
                 token = NewDoToken(DoTokenString, curr_pos, lexer->position + 1, lexer->line, literal_or_keyword);
             }
         }
     }
+    // else
+    // {
+    //     Log(DEBUG, "lexer doesn't know what token");
+    // }
 
     return token;
 }
@@ -284,97 +291,98 @@ extern void PrintDoToken(DoToken *token, bool print_literal)
     if (token == NULL)
     {
         errno = EINVAL;
+        Log(DEBUG, "PrintDoToken, input token is NULL");
         return;
     }
     printf("Line: %u Place: %u - %u ", token->line, token->start, token->end);
     switch (token->type)
     {
     case DoTokenEOF:
-        printf("DoTokenEOF\n");
+        printf("DoTokenEOF");
         break;
     case DoTokenInclude:
-        printf("DoTokenInclude\n");
+        printf("DoTokenInclude");
         break;
     case DoTokenOpenCurlyBrace:
-        printf("DoTokenOpenCurlyBrace\n");
+        printf("DoTokenOpenCurlyBrace");
         break;
     case DoTokenCloseCurlyBrace:
-        printf("DoTokenCloseCurlyBrace\n");
+        printf("DoTokenCloseCurlyBrace");
         break;
     case DoTokenDoubleQuotes:
-        printf("DoTokenDoubleQuotes\n");
+        printf("DoTokenDoubleQuotes");
         break;
     case DoTokenOpenBracket:
-        printf("DoTokenOpenBracket\n");
+        printf("DoTokenOpenBracket");
         break;
     case DoTokenCloseBracket:
-        printf("DoTokenCloseBracket\n");
+        printf("DoTokenCloseBracket");
         break;
     case DoTokenSemiColon:
-        printf("DoTokenSemiColon\n");
+        printf("DoTokenSemiColon");
         break;
     case DoTokenEqualsSign:
-        printf("DoTokenEqualsSign\n");
+        printf("DoTokenEqualsSign");
         break;
     case DoTokenString:
-        printf("DoTokenString\n");
+        printf("DoTokenString");
         break;
     case DoTokenNumber:
-        printf("DoTokenNumber\n");
+        printf("DoTokenNumber");
         break;
     case DoTokenBool:
-        printf("DoTokenBool\n");
+        printf("DoTokenBool");
         break;
     case DoTokenNamespace:
-        printf("DoTokenNamespace\n");
+        printf("DoTokenNamespace");
         break;
     case DoTokenVars:
-        printf("DoTokenVars\n");
+        printf("DoTokenVars");
         break;
     case DoTokenEnv:
-        printf("DoTokenEnv\n");
+        printf("DoTokenEnv");
         break;
     case DoTokenTask:
-        printf("DoTokenTask\n");
+        printf("DoTokenTask");
         break;
     case DoTokenDeps:
-        printf("DoTokenDeps\n");
+        printf("DoTokenDeps");
         break;
     case DoTokenFlags:
-        printf("DoTokenFlags\n");
+        printf("DoTokenFlags");
         break;
     case DoTokenCmds:
-        printf("DoTokenCmds\n");
+        printf("DoTokenCmds");
         break;
     case DoTokenStatus:
-        printf("DoTokenStatus\n");
+        printf("DoTokenStatus");
         break;
     case DoTokenSpace:
-        printf("DoTokenSpace\n");
+        printf("DoTokenSpace");
         break;
     case DoTokenTab:
-        printf("DoTokenTab\n");
+        printf("DoTokenTab");
         break;
     case DoTokenNewline:
-        printf("DoTokenNewline\n");
+        printf("DoTokenNewline");
         break;
     case DoTokenOpenParentheses:
-        printf("DoTokenOpenParentheses\n");
+        printf("DoTokenOpenParentheses");
         break;
     case DoTokenCloseParentheses:
-        printf("DoTokenCloseParentheses\n");
+        printf("DoTokenCloseParentheses");
         break;
     case DoTokenComma:
-        printf("DoTokenComma\n");
+        printf("DoTokenComma");
         break;
     case DoTokenIllegal:
-        printf("DoTokenIllegal\n");
+        printf("DoTokenIllegal");
         break;
     }
 
-    if (print_literal && token->type != DoTokenIllegal && token->type != DoTokenEOF)
+    if (print_literal && (token->type == DoTokenString))
     {
-        printf("Literal: %s\n", token->literal);
+        printf(" : %s\n", token->literal);
         // if (token->type == DoTokenString)
         // {
         //     printf("Literal: \"%s\"\n", token->literal);

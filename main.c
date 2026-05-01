@@ -3,13 +3,20 @@
 
 #include "./do.h"
 
+#include <standardloop/logger.h>
+
 int main()
 {
     char *buffer = ReadFile("./main.do");
     // printf("%s", buffer);
     // exit(1);
-    DoLexerDebugTest(buffer, false);
+    InitLoggerEasy(StringToLogLevel("TRACE"));
 
-    free(buffer);
+    // DoLexerDebugTest(buffer, true);
+    DoLexer *lexer = DoLexerInit(buffer);
+    DoParser *parser = DoParserInit(lexer);
+    Do *do_var = ParseDo(parser);
+
+    // free(buffer);
     return 0;
 }

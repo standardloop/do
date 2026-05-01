@@ -2,6 +2,10 @@ include "example.do"
 
 namespace foo {
 
+    flags {
+        
+    }
+
     vars {
         CC = "gcc"
         SOURCE_FILES = ["main.c"]
@@ -18,7 +22,7 @@ namespace foo {
 
     task foo() {
         flags {
-           
+
         }
         deps {
             task test("foo", "bar")

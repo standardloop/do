@@ -10,6 +10,7 @@ vars:
   SOURCE_FILES:
     - main.c
     - lexer.c
+    - parser.c
 
 # Inputs
 # - REPO_NAME
