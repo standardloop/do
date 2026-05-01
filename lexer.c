@@ -151,7 +151,7 @@ static char *parseLiteralOrKeyword(DoLexer *lexer)
         // printf("%c", lexer->current_char);
         if (lexer->current_char == NULL_CHAR || lexer->current_char == NEWLINE_CHAR ||
             lexer->current_char == SPACE_CHAR || lexer->current_char == DOUBLE_QUOTES_CHAR ||
-            lexer->current_char == '(' || lexer->current_char == ')')
+            lexer->current_char == '(' || lexer->current_char == ')' || lexer->current_char == COMMA_CHAR)
         {
             break;
         }
@@ -262,10 +262,6 @@ extern DoToken *DoLex(DoLexer *lexer)
             }
         }
     }
-    // else
-    // {
-    //     Log(DEBUG, "lexer doesn't know what token");
-    // }
 
     return token;
 }
@@ -452,7 +448,7 @@ extern void FreeDoToken(DoToken *token)
 
     if (token->type == DoTokenInclude || token->type == DoTokenNamespace || token->type == DoTokenStatus ||
         token->type == DoTokenCmds || token->type == DoTokenFlags || token->type == DoTokenDeps ||
-        token->type == DoTokenTask || token->type == DoTokenEnv || token->type == DoTokenVars || token->type == DoTokenString)
+        token->type == DoTokenTask || token->type == DoTokenVars || token->type == DoTokenEnv || token->type == DoTokenString)
     {
         if (token->literal != NULL)
         {

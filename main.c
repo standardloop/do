@@ -15,8 +15,10 @@ int main()
     // DoLexerDebugTest(buffer, true);
     DoLexer *lexer = DoLexerInit(buffer);
     DoParser *parser = DoParserInit(lexer);
+    // FreeParser(parser);
     Do *do_var = ParseDo(parser);
+    FreeDo(do_var);
 
-    // free(buffer);
+    free(buffer);
     return 0;
 }

@@ -11,6 +11,7 @@ vars:
     - main.c
     - lexer.c
     - parser.c
+    - do.c
 
 # Inputs
 # - REPO_NAME

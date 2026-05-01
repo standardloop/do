@@ -52,7 +52,7 @@ static void *parse(DoParser *parser)
         nextDoToken(parser);
     }
     PrintDoToken(parser->current_token, false);
-    Log(FATAL, "done");
+    // Log(FATAL, "done");
 
     void *return_value = NULL;
     return return_value;
@@ -116,15 +116,14 @@ extern Do *ParseDo(DoParser *parser)
     {
         return NULL;
     }
-    Do *do_var = malloc(sizeof(Do));
-    if (do_var == NULL)
-    {
-        FreeDoParser(parser);
-        errno = ENOMEM;
-        return NULL;
-    }
+    // if (do_var == NULL)
+    // {
+    //     FreeDoParser(parser);
+    //     errno = ENOMEM;
+    //     return NULL;
+    // }
 
-    do_var = parse(parser);
+    Do *do_var = parse(parser);
 
     FreeDoParser(parser);
     return do_var;

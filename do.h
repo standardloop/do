@@ -46,6 +46,8 @@ typedef struct
     DoNamespace *namespaces;
 } Do;
 
+extern void FreeDo(Do *);
+
 // ————————— LEXER START —————————
 enum DoTokenType
 {
@@ -130,4 +132,5 @@ extern void PrintDoParserErrorLine(DoParser *);
 extern Do *ParseDo(DoParser *);
 
 // ————————— PARSER END —————————
+
 #endif
