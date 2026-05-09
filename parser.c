@@ -12,6 +12,7 @@ static void nextDoToken(DoParser *parser)
 {
     if (parser == NULL)
     {
+        errno = EINVAL;
         return;
     }
     FreeDoToken(parser->current_token);
@@ -48,13 +49,57 @@ static Do *initDo()
         errno = ENOMEM;
         return NULL;
     }
-    do_var->namespaces = InitNamespaces();
+    do_var->namespaces = DoDynArrayInit(DYN_ARR_NAMESPACE, DEFAULT_DO_DYN_ARR_SIZE);
     if (do_var->namespaces == NULL)
     {
         errno = ENOMEM;
         return NULL;
     }
     return do_var;
+}
+static DoNamespace *parseNamespace(DoParser *parser)
+{
+    if (parser == NULL)
+    {
+        Log(FATAL, "parser sent into parseNamespace is NULL");
+        errno = EINVAL;
+        return NULL;
+    }
+    if (parser->current_token->type != DoTokenNamespace)
+    {
+        Log(FATAL, "parseNamespace current token is incorrect");
+        return NULL;
+    }
+    nextDoToken(parser);
+    if (parser->current_token->type != DoTokenSpace)
+    {
+        Log(FATAL, "space must come after namespace");
+        return NULL;
+    }
+    nextDoToken(parser);
+    if (parser->current_token->type != DoTokenString)
+    {
+        Log(FATAL, "namespace name must come after space");
+        return NULL;
+    }
+    char *namespace_name = QuickAllocatedString(parser->current_token->literal);
+    DoNamespace *namespace = InitDoNamespace(namespace_name);
+    nextDoToken(parser);
+    if (parser->current_token->type != DoTokenSpace)
+    {
+        FreeDoNamespace(namespace);
+        Log(FATAL, "space must come after namespace name");
+        return NULL;
+    }
+    nextDoToken(parser);
+    if (parser->current_token->type != DoTokenOpenCurlyBrace)
+    {
+        FreeDoNamespace(namespace);
+        Log(FATAL, "open curly brace expected after space after namespace name");
+        return NULL;
+    }
+
+    return namespace;
 }
 
 static Do *parse(DoParser *parser)
@@ -76,11 +121,19 @@ static Do *parse(DoParser *parser)
         PrintDoToken(parser->current_token, true);
         if (parser->current_token->type == DoTokenInclude)
         {
-            // AddDoInclude(do_var->includes, parser);
+            Log(FATAL, "parsing includes not supported yet");
         }
         else if (parser->current_token->type == DoTokenNamespace)
         {
-            // AddDoNamespace(do_var->namespaces, parser);
+            DoNamespace *namespace = parseNamespace(parser);
+            if (namespace == NULL)
+            {
+                Log(FATAL, "namespace is NULL issue with parseNamespace(parser);");
+            }
+            else
+            {
+                DoDynArrayAddLast(do_var->namespaces, namespace);
+            }
         }
         nextDoToken(parser);
     }

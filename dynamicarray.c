@@ -91,6 +91,10 @@ static void dynamicArrayResize(DoDynArray *dynamic_array)
     {
         newList = malloc(sizeof(DoTask *) * dynamic_array->capacity * DEFAULT_DO_DYN_ARR_RESIZE_MULTIPLE);
     }
+    else if (dynamic_array->type == DYN_ARR_NAMESPACE)
+    {
+        newList = malloc(sizeof(DoNamespace *) * dynamic_array->capacity * DEFAULT_DO_DYN_ARR_RESIZE_MULTIPLE);
+    }
 
     if (newList == NULL)
     {
@@ -129,10 +133,11 @@ static void freeDoDynArrayValue(enum DoDynArrayTypes type, void *item)
     }
     else if (type == DYN_ARR_NAMESPACE)
     {
-        FreeDoNamespace();
+        FreeDoNamespace(item);
     }
     else
     {
+        Log(FATAL, "not implemented yet");
     }
 }
 

@@ -1,19 +1,46 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <standardloop/logger.h>
+
 #include "./do.h"
 
-extern DoDynArray *InitNamespaces()
+extern DoNamespace *InitDoNamespace(char *name)
 {
-    DoDynArray *namespaces = DoDynArrayInit(DYN_ARR_NAMESPACE, 10);
-    return namespaces;
-}
-extern void AddDoNamespace(DoDynArray *namespaces, DoParser *parser)
-{
-    if (namespaces == NULL || parser == NULL)
+    if (name == NULL)
     {
-        return;
+        // errno todo
+        Log(FATAL, "name is NULL for InitDoNamespace");
+        return NULL;
     }
+    DoNamespace *namespace = malloc(sizeof(DoNamespace));
+    if (namespace == NULL)
+    {
+        Log(FATAL, "couldn't allocate memory for namespace");
+        return NULL;
+    }
+    namespace->name = name;
+
+    namespace->tasks = DoDynArrayInit(DYN_ARR_TASK, DEFAULT_DO_DYN_ARR_SIZE);
+    if (namespace->tasks == NULL)
+    {
+        Log(FATAL, "couldn't allocate memory for namespace tasks");
+        return NULL;
+    }
+    return namespace;
 }
 
-extern void FreeDoNamespace()
+extern void FreeDoNamespace(DoNamespace *namespace)
 {
-    return;
+    if (namespace != NULL)
+    {
+        if (namespace->name != NULL)
+        {
+            free(namespace->name);
+        }
+        if (namespace->tasks != NULL)
+        {
+            FreeDoDynArray(namespace->tasks);
+        }
+        free(namespace);
+    }
 }

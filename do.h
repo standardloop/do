@@ -134,14 +134,16 @@ extern void PrintDoParserErrorLine(DoParser *);
 
 typedef struct
 {
+    char *name;
     DoDynArray *tasks;
     // DoFlags *flags;
     // DoVars *vars;
     // DoEnv *envs;
 } DoNamespace;
-extern DoDynArray *InitNamespaces();
+
+extern DoNamespace *InitDoNamespace(char *);
 extern void AddDoNamespace(DoDynArray *, DoParser *);
-extern void FreeDoNamespace();
+extern void FreeDoNamespace(DoNamespace *);
 
 // typedef struct
 // {

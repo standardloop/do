@@ -9,10 +9,12 @@
 
 extern void FreeDo(Do *do_value)
 {
-    if (do_value == NULL)
+    if (do_value != NULL)
     {
-        errno = EINVAL;
-        return;
+        if (do_value->namespaces != NULL)
+        {
+            FreeDoDynArray(do_value->namespaces);
+        }
+        free(do_value);
     }
-    free(do_value);
 }
