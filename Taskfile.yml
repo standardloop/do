@@ -12,6 +12,9 @@ vars:
     - lexer.c
     - parser.c
     - do.c
+    - dynamicarray.c
+    - task.c
+    - namespace.c
 
 # Inputs
 # - REPO_NAME
@@ -86,7 +89,7 @@ tasks:
       - dependencies
     cmds:
       - |
-        {{.CC}} {{.CFLAGS}} \
+        {{.CC}} {{.CC_FLAGS}} \
         {{range .SOURCE_FILES}} {{.}} {{end}} \
         {{.DYN_LIBS_USED_PATH}} \
         {{.DYN_LIBS_USED}} \

@@ -38,24 +38,56 @@ static void nextDoToken(DoParser *parser)
     parser->peek_token = DoLex(parser->lexer);
 }
 
-static void *parse(DoParser *parser)
+static Do *initDo();
+
+static Do *initDo()
+{
+    Do *do_var = malloc(sizeof(Do));
+    if (do_var == NULL)
+    {
+        errno = ENOMEM;
+        return NULL;
+    }
+    do_var->namespaces = InitNamespaces();
+    if (do_var->namespaces == NULL)
+    {
+        errno = ENOMEM;
+        return NULL;
+    }
+    return do_var;
+}
+
+static Do *parse(DoParser *parser)
 {
     if (parser == NULL)
     {
         errno = EINVAL;
         return NULL;
     }
+    Do *do_var = initDo();
+    if (do_var == NULL)
+    {
+        errno = ENOMEM;
+        return NULL;
+    }
     nextDoToken(parser);
     while (parser->current_token != NULL && parser->current_token->type != DoTokenEOF)
     {
         PrintDoToken(parser->current_token, true);
+        if (parser->current_token->type == DoTokenInclude)
+        {
+            // AddDoInclude(do_var->includes, parser);
+        }
+        else if (parser->current_token->type == DoTokenNamespace)
+        {
+            // AddDoNamespace(do_var->namespaces, parser);
+        }
         nextDoToken(parser);
     }
     PrintDoToken(parser->current_token, false);
     // Log(FATAL, "done");
 
-    void *return_value = NULL;
-    return return_value;
+    return do_var;
 }
 
 extern DoParser *DoParserInit(DoLexer *lexer)
@@ -72,9 +104,6 @@ extern DoParser *DoParserInit(DoLexer *lexer)
         errno = ENOMEM;
         return NULL;
     }
-
-    parser->input_error = false;
-    parser->memory_error = false;
     parser->error_message = NULL;
     parser->lexer = lexer;
     parser->list_nested = 0;
@@ -87,7 +116,13 @@ extern DoParser *DoParserInit(DoLexer *lexer)
     return parser;
 }
 
-extern void PrintDoParserError(DoParser *parser) {}
+extern void PrintDoParserError(DoParser *parser)
+{
+    if (parser == NULL)
+    {
+        return;
+    }
+}
 
 extern void FreeDoParser(DoParser *parser)
 {
@@ -109,7 +144,13 @@ extern void FreeDoParser(DoParser *parser)
     }
 }
 
-extern void PrintDoParserErrorLine(DoParser *parser) {}
+extern void PrintDoParserErrorLine(DoParser *parser)
+{
+    if (parser == NULL)
+    {
+        return;
+    }
+}
 extern Do *ParseDo(DoParser *parser)
 {
     if (parser == NULL)

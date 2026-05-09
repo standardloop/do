@@ -9,11 +9,8 @@
 
 static void advanceChar(DoLexer *);
 static void backtrackChar(DoLexer *);
-static void skipWhitespace(DoLexer *);
-static char *makeStringLiteral(DoLexer *);
-static char *makeNumberLiteral(DoLexer *);
-static char *makeNULLLiteral(DoLexer *);
-static char *makeBoolLiteral(DoLexer *);
+// static void skipWhitespace(DoLexer *);
+
 typedef struct
 {
     const char *literal;
@@ -103,17 +100,17 @@ static void backtrackChar(DoLexer *lexer)
     lexer->current_char = lexer->input[lexer->read_position];
 }
 
-static void skipWhitespace(DoLexer *lexer)
-{
-    while (lexer->current_char == SPACE_CHAR || lexer->current_char == TAB_CHAR || lexer->current_char == NEWLINE_CHAR || lexer->current_char == CARRIAGE_CHAR)
-    {
-        if (lexer->current_char == NEWLINE_CHAR)
-        {
-            lexer->line++;
-        }
-        advanceChar(lexer);
-    }
-}
+// static void skipWhitespace(DoLexer *lexer)
+// {
+//     while (lexer->current_char == SPACE_CHAR || lexer->current_char == TAB_CHAR || lexer->current_char == NEWLINE_CHAR || lexer->current_char == CARRIAGE_CHAR)
+//     {
+//         if (lexer->current_char == NEWLINE_CHAR)
+//         {
+//             lexer->line++;
+//         }
+//         advanceChar(lexer);
+//     }
+// }
 
 static void copyString(char *, char *, size_t, size_t);
 
@@ -144,7 +141,7 @@ static char *parseLiteralOrKeyword(DoLexer *lexer)
     {
         return NULL;
     }
-    char first_char = lexer->current_char;
+    //char first_char = lexer->current_char;
     u_int32_t start_position = lexer->position;
     while (ALWAYS)
     {

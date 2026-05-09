@@ -28,7 +28,7 @@ namespace foo {
             task test("foo", "bar")
         }
         cmds {
-
+            echo "hello!"
         }
         status {
 

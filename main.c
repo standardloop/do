@@ -7,7 +7,7 @@
 
 int main()
 {
-    char *buffer = ReadFile("./main.do");
+    char *buffer = ReadFile("./simple.do");
     // printf("%s", buffer);
     // exit(1);
     InitLoggerEasy(StringToLogLevel("TRACE"));
@@ -18,7 +18,6 @@ int main()
     // FreeParser(parser);
     Do *do_var = ParseDo(parser);
     FreeDo(do_var);
-
     free(buffer);
     return 0;
 }

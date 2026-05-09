@@ -5,6 +5,29 @@
 
 extern char *ReadFile(char *);
 
+#define DEFAULT_DO_DYN_ARR_SIZE 16
+#define DEFAULT_DO_DYN_ARR_RESIZE_MULTIPLE 2
+
+enum DoDynArrayTypes
+{
+    DYN_ARR_TASK,
+    DYN_ARR_NAMESPACE,
+};
+
+typedef struct
+{
+    enum DoDynArrayTypes type;
+    u_int32_t size;
+    u_int32_t capacity;
+    void **list;
+} DoDynArray;
+
+extern void FreeDoDynArray(DoDynArray *);
+extern void DoDynArrayAdd(DoDynArray *, void *, u_int32_t);
+extern void DoDynArrayAddLast(DoDynArray *, void *);
+extern void DoDynArrayAddFirst(DoDynArray *, void *);
+extern DoDynArray *DoDynArrayInit(enum DoDynArrayTypes, u_int32_t);
+
 typedef struct
 {
 
@@ -22,31 +45,12 @@ typedef struct
 
 typedef struct
 {
-
+    char *name;
+    // DoDynArray *args;
+    char *cmds;
 } DoTask;
 
-typedef struct
-{
-    int config;
-    DoTask *tasks;
-    DoFlags *flags;
-    DoVars *vars;
-    DoEnv *envs;
-} DoNamespace;
-
-typedef struct
-{
-    char *path;
-    bool is_remote;
-} DoIncludes;
-
-typedef struct
-{
-    DoIncludes *includes;
-    DoNamespace *namespaces;
-} Do;
-
-extern void FreeDo(Do *);
+extern void FreeDoTask();
 
 // ————————— LEXER START —————————
 enum DoTokenType
@@ -118,8 +122,6 @@ typedef struct
     DoLexer *lexer;
     DoToken *current_token;
     DoToken *peek_token;
-    bool input_error;
-    bool memory_error;
     char *error_message;
     int64_t list_nested;
     int64_t obj_nested;
@@ -129,8 +131,32 @@ extern DoParser *DoParserInit(DoLexer *);
 extern void PrintDoParserError(DoParser *);
 extern void FreeDoParser(DoParser *);
 extern void PrintDoParserErrorLine(DoParser *);
+
+typedef struct
+{
+    DoDynArray *tasks;
+    // DoFlags *flags;
+    // DoVars *vars;
+    // DoEnv *envs;
+} DoNamespace;
+extern DoDynArray *InitNamespaces();
+extern void AddDoNamespace(DoDynArray *, DoParser *);
+extern void FreeDoNamespace();
+
+// typedef struct
+// {
+//     char *path;
+// } DoIncludes;
+
+typedef struct
+{
+    // DoIncludes *includes;
+    DoDynArray *namespaces;
+} Do;
+
 extern Do *ParseDo(DoParser *);
 
+extern void FreeDo(Do *);
 // ————————— PARSER END —————————
 
 #endif
