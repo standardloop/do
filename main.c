@@ -17,6 +17,7 @@ int main()
     DoParser *parser = DoParserInit(lexer);
     // FreeParser(parser);
     Do *do_var = ParseDo(parser);
+    PrintDo(do_var);
     FreeDo(do_var);
     free(buffer);
     return 0;

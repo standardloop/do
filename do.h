@@ -159,6 +159,8 @@ typedef struct
 } Do;
 
 extern Do *ParseDo(DoParser *);
+extern Do *InitDo();
+extern void PrintDo(Do *);
 
 extern void FreeDo(Do *);
 // ————————— PARSER END —————————

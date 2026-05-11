@@ -24,6 +24,7 @@ extern DoDynArray *DoDynArrayInit(enum DoDynArrayTypes type, u_int32_t initial_c
     dynamic_array->size = 0;
     dynamic_array->capacity = initial_capacity;
     dynamic_array->list = NULL;
+    dynamic_array->type = type;
     if (type == DYN_ARR_TASK)
     {
         dynamic_array->list = malloc(sizeof(DoTask *) * initial_capacity);
@@ -127,6 +128,7 @@ static void freeDoDynArrayValue(enum DoDynArrayTypes type, void *item)
     {
         return;
     }
+    Log(INFO, "freeDoDynArrayValue: %d", type);
     if (type == DYN_ARR_TASK)
     {
         FreeDoTask((DoTask *)item);
@@ -143,6 +145,7 @@ static void freeDoDynArrayValue(enum DoDynArrayTypes type, void *item)
 
 static void freeDoDynArrayList(enum DoDynArrayTypes type, void **list, u_int32_t size, bool deep)
 {
+    Log(INFO, "entering freeDoDynArrayList with type: %d", type);
     if (list == NULL)
     {
         return;
@@ -159,13 +162,13 @@ static void freeDoDynArrayList(enum DoDynArrayTypes type, void **list, u_int32_t
 
 extern void FreeDoDynArray(DoDynArray *dynamic_array)
 {
-    if (dynamic_array == NULL)
+    Log(INFO, "entering FreeDoDynArray with array type: %d", dynamic_array->type);
+    if (dynamic_array != NULL)
     {
-        return;
+        if (dynamic_array->list != NULL)
+        {
+            freeDoDynArrayList(dynamic_array->type, dynamic_array->list, dynamic_array->size, true);
+        }
+        free(dynamic_array);
     }
-    if (dynamic_array->list != NULL)
-    {
-        freeDoDynArrayList(dynamic_array->type, dynamic_array->list, dynamic_array->size, true);
-    }
-    free(dynamic_array);
 }

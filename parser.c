@@ -42,24 +42,6 @@ static void nextDoToken(DoParser *parser)
     parser->peek_token = DoLex(parser->lexer);
 }
 
-static Do *initDo();
-
-static Do *initDo()
-{
-    Do *do_var = malloc(sizeof(Do));
-    if (do_var == NULL)
-    {
-        errno = ENOMEM;
-        return NULL;
-    }
-    do_var->namespaces = DoDynArrayInit(DYN_ARR_NAMESPACE, DEFAULT_DO_DYN_ARR_SIZE);
-    if (do_var->namespaces == NULL)
-    {
-        errno = ENOMEM;
-        return NULL;
-    }
-    return do_var;
-}
 static DoNamespace *parseDoNamespace(DoParser *parser)
 {
     if (parser == NULL)
@@ -111,7 +93,7 @@ static DoNamespace *parseDoNamespace(DoParser *parser)
             {
                 Log(INFO, "parsed a task, adding it to namespace->tasks");
                 DoDynArrayAddLast(namespace->tasks, (DoTask *)task);
-                Log(INFO, "%d", namespace->tasks->size);
+                // Log(INFO, "%d", namespace->tasks->size);
             }
         }
         nextDoToken(parser);
@@ -197,7 +179,7 @@ static Do *parse(DoParser *parser)
         errno = EINVAL;
         return NULL;
     }
-    Do *do_var = initDo();
+    Do *do_var = InitDo();
     if (do_var == NULL)
     {
         errno = ENOMEM;
@@ -222,6 +204,7 @@ static Do *parse(DoParser *parser)
             else
             {
                 DoDynArrayAddLast(do_var->namespaces, namespace);
+                Log(INFO, "finished parsing namespace adding to Do dyn array");
             }
         }
         nextDoToken(parser);

@@ -4,4 +4,9 @@ namespace simple {
             echo "hello!"
         }
     }
+    task test {
+        cmds {
+            echo "test!"
+        }
+    }
 }
