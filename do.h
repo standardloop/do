@@ -43,15 +43,6 @@ typedef struct
 
 } DoEnv;
 
-typedef struct
-{
-    char *name;
-    // DoDynArray *args;
-    char *cmds;
-} DoTask;
-
-extern void FreeDoTask();
-
 // ————————— LEXER START —————————
 enum DoTokenType
 {
@@ -101,6 +92,7 @@ typedef struct
     u_int32_t position;
     u_int32_t read_position;
     u_int32_t line;
+    bool in_command;
 } DoLexer;
 
 extern DoLexer *DoLexerInit(char *);
@@ -131,6 +123,16 @@ extern DoParser *DoParserInit(DoLexer *);
 extern void PrintDoParserError(DoParser *);
 extern void FreeDoParser(DoParser *);
 extern void PrintDoParserErrorLine(DoParser *);
+
+typedef struct
+{
+    char *name;
+    // DoDynArray *args;
+    char *cmds; // not sure this should be char *
+} DoTask;
+
+extern DoTask *InitDoTask(char *);
+extern void FreeDoTask(DoTask *);
 
 typedef struct
 {

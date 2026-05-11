@@ -129,11 +129,11 @@ static void freeDoDynArrayValue(enum DoDynArrayTypes type, void *item)
     }
     if (type == DYN_ARR_TASK)
     {
-        FreeDoTask();
+        FreeDoTask((DoTask *)item);
     }
     else if (type == DYN_ARR_NAMESPACE)
     {
-        FreeDoNamespace(item);
+        FreeDoNamespace((DoNamespace *)item);
     }
     else
     {

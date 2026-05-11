@@ -8,6 +8,9 @@
 #include <standardloop/logger.h>
 
 static void nextDoToken(DoParser *);
+
+static DoTask *parseTask(DoParser *);
+
 static void nextDoToken(DoParser *parser)
 {
     if (parser == NULL)
@@ -57,23 +60,17 @@ static Do *initDo()
     }
     return do_var;
 }
-static DoNamespace *parseNamespace(DoParser *parser)
+static DoNamespace *parseDoNamespace(DoParser *parser)
 {
     if (parser == NULL)
     {
-        Log(FATAL, "parser sent into parseNamespace is NULL");
+        Log(FATAL, "parser sent into parseDoNamespace is NULL");
         errno = EINVAL;
         return NULL;
     }
     if (parser->current_token->type != DoTokenNamespace)
     {
-        Log(FATAL, "parseNamespace current token is incorrect");
-        return NULL;
-    }
-    nextDoToken(parser);
-    if (parser->current_token->type != DoTokenSpace)
-    {
-        Log(FATAL, "space must come after namespace");
+        Log(FATAL, "parseDoNamespace current token is incorrect");
         return NULL;
     }
     nextDoToken(parser);
@@ -84,13 +81,7 @@ static DoNamespace *parseNamespace(DoParser *parser)
     }
     char *namespace_name = QuickAllocatedString(parser->current_token->literal);
     DoNamespace *namespace = InitDoNamespace(namespace_name);
-    nextDoToken(parser);
-    if (parser->current_token->type != DoTokenSpace)
-    {
-        FreeDoNamespace(namespace);
-        Log(FATAL, "space must come after namespace name");
-        return NULL;
-    }
+    namespace->name = namespace_name;
     nextDoToken(parser);
     if (parser->current_token->type != DoTokenOpenCurlyBrace)
     {
@@ -99,7 +90,104 @@ static DoNamespace *parseNamespace(DoParser *parser)
         return NULL;
     }
 
+    nextDoToken(parser);
+    while (ALWAYS)
+    {
+        if (parser->current_token->type == DoTokenEOF || parser->current_token->type == DoTokenIllegal || parser->obj_nested == 0)
+        {
+            break;
+        }
+        else if (parser->current_token->type == DoTokenTask)
+        {
+
+            DoTask *task = parseTask(parser);
+            if (task == NULL)
+            {
+                Log(FATAL, "parseTask returned NULL");
+                FreeDoNamespace(namespace);
+                return NULL;
+            }
+            else
+            {
+                Log(INFO, "parsed a task, adding it to namespace->tasks");
+                DoDynArrayAddLast(namespace->tasks, (DoTask *)task);
+                Log(INFO, "%d", namespace->tasks->size);
+            }
+        }
+        nextDoToken(parser);
+    }
+
     return namespace;
+}
+
+static DoTask *parseTask(DoParser *parser)
+{
+    if (parser == NULL)
+    {
+        Log(FATAL, "parseTask(DoParser *parser), parser is NULL");
+        return NULL;
+    }
+    if (parser->current_token->type != DoTokenTask || parser->peek_token->type != DoTokenString)
+    {
+        Log(FATAL, "(parser->current_token->type != DoTokenTask || parser->peek_token->type != DoTokenString)");
+        return NULL;
+    }
+
+    nextDoToken(parser);
+    if (parser->current_token->type != DoTokenString || parser->peek_token->type != DoTokenOpenCurlyBrace)
+    {
+        Log(FATAL, "(parser->current_token->type != DoTokenString || parser->peek_token->type != DoTokenOpenCurlyBrace)");
+        return NULL;
+    }
+    char *task_name = QuickAllocatedString(parser->current_token->literal);
+    DoTask *task = InitDoTask(task_name);
+    if (task == NULL)
+    {
+        free(task_name);
+        Log(FATAL, "task is NULL");
+        return NULL;
+    }
+
+    nextDoToken(parser);
+    if (parser->current_token->type != DoTokenOpenCurlyBrace || parser->peek_token->type != DoTokenCmds)
+    {
+        FreeDoTask(task);
+        Log(FATAL, "(parser->current_token->type != DoTokenOpenCurlyBrace || parser->peek_token->type != DoTokenCmds)");
+        return NULL;
+    }
+    nextDoToken(parser);
+    if (parser->current_token->type != DoTokenCmds || parser->peek_token->type != DoTokenOpenCurlyBrace)
+    {
+        FreeDoTask(task);
+        Log(FATAL, "(error parsing task)");
+        return NULL;
+    }
+    nextDoToken(parser);
+    if (parser->current_token->type != DoTokenOpenCurlyBrace)
+    {
+        FreeDoTask(task);
+        Log(FATAL, "(error parsing task)");
+        return NULL;
+    }
+    nextDoToken(parser);
+    if (parser->current_token->type != DoTokenString || parser->peek_token->type != DoTokenCloseCurlyBrace)
+    {
+        FreeDoTask(task);
+        Log(FATAL, "(error parsing task)");
+        return NULL;
+    }
+    char *task_cmds = QuickAllocatedString(parser->current_token->literal);
+    task->cmds = task_cmds;
+    // Log(INFO, "%s", task->cmds);
+    nextDoToken(parser);
+    if (parser->current_token->type != DoTokenCloseCurlyBrace) // || parser->obj_nested != FIXME)
+    {
+        FreeDoTask(task);
+        Log(FATAL, "(error parsing task)");
+        return NULL;
+    }
+
+    return task;
 }
 
 static Do *parse(DoParser *parser)
@@ -125,10 +213,11 @@ static Do *parse(DoParser *parser)
         }
         else if (parser->current_token->type == DoTokenNamespace)
         {
-            DoNamespace *namespace = parseNamespace(parser);
+            Log(INFO, "found a DoTokenNamespace to start parsing");
+            DoNamespace *namespace = parseDoNamespace(parser);
             if (namespace == NULL)
             {
-                Log(FATAL, "namespace is NULL issue with parseNamespace(parser);");
+                Log(FATAL, "namespace is NULL issue with parseDoNamespace(parser);");
             }
             else
             {
@@ -210,15 +299,7 @@ extern Do *ParseDo(DoParser *parser)
     {
         return NULL;
     }
-    // if (do_var == NULL)
-    // {
-    //     FreeDoParser(parser);
-    //     errno = ENOMEM;
-    //     return NULL;
-    // }
-
     Do *do_var = parse(parser);
-
     FreeDoParser(parser);
     return do_var;
 }

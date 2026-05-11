@@ -1,5 +1,5 @@
 namespace simple {
-    task hello() {
+    task hello {
         cmds {
             echo "hello!"
         }

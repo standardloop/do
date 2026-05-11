@@ -115,7 +115,7 @@ tasks:
       - dependencies
     cmds:
       - |
-        {{.CC}} {{.CFLAGS}} \
+        {{.CC}} {{.CC_FLAGS}} \
         -fsanitize=address \
         -fno-omit-frame-pointer \
         {{range .SOURCE_FILES}} {{.}} {{end}} \

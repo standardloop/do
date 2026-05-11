@@ -9,7 +9,7 @@
 
 static void advanceChar(DoLexer *);
 static void backtrackChar(DoLexer *);
-// static void skipWhitespace(DoLexer *);
+static void skipWhitespace(DoLexer *);
 
 typedef struct
 {
@@ -87,6 +87,7 @@ extern DoLexer *DoLexerInit(char *input)
     lexer->position = -2;
     lexer->read_position = -1;
     lexer->line = 1;
+    lexer->in_command = false;
 
     advanceChar(lexer);
 
@@ -100,17 +101,17 @@ static void backtrackChar(DoLexer *lexer)
     lexer->current_char = lexer->input[lexer->read_position];
 }
 
-// static void skipWhitespace(DoLexer *lexer)
-// {
-//     while (lexer->current_char == SPACE_CHAR || lexer->current_char == TAB_CHAR || lexer->current_char == NEWLINE_CHAR || lexer->current_char == CARRIAGE_CHAR)
-//     {
-//         if (lexer->current_char == NEWLINE_CHAR)
-//         {
-//             lexer->line++;
-//         }
-//         advanceChar(lexer);
-//     }
-// }
+static void skipWhitespace(DoLexer *lexer)
+{
+    while (lexer->current_char == SPACE_CHAR || lexer->current_char == TAB_CHAR || lexer->current_char == NEWLINE_CHAR || lexer->current_char == CARRIAGE_CHAR)
+    {
+        if (lexer->current_char == NEWLINE_CHAR)
+        {
+            lexer->line++;
+        }
+        advanceChar(lexer);
+    }
+}
 
 static void copyString(char *, char *, size_t, size_t);
 
@@ -141,17 +142,28 @@ static char *parseLiteralOrKeyword(DoLexer *lexer)
     {
         return NULL;
     }
-    //char first_char = lexer->current_char;
+    // char first_char = lexer->current_char;
     u_int32_t start_position = lexer->position;
     while (ALWAYS)
     {
         // printf("%c", lexer->current_char);
-        if (lexer->current_char == NULL_CHAR || lexer->current_char == NEWLINE_CHAR ||
-            lexer->current_char == SPACE_CHAR || lexer->current_char == DOUBLE_QUOTES_CHAR ||
-            lexer->current_char == '(' || lexer->current_char == ')' || lexer->current_char == COMMA_CHAR)
+        if (lexer->in_command)
         {
-            break;
+            if (lexer->current_char == NULL_CHAR || lexer->current_char == CURLY_CLOSE_CHAR)
+            {
+                break;
+            }
         }
+        else
+        {
+            if (lexer->current_char == NULL_CHAR || lexer->current_char == NEWLINE_CHAR ||
+                lexer->current_char == SPACE_CHAR || lexer->current_char == DOUBLE_QUOTES_CHAR ||
+                lexer->current_char == '(' || lexer->current_char == ')' || lexer->current_char == COMMA_CHAR)
+            {
+                break;
+            }
+        }
+
         advanceChar(lexer);
     }
     u_int32_t literal_size = (lexer->position - start_position) + 1;
@@ -171,7 +183,8 @@ extern DoToken *DoLex(DoLexer *lexer)
 {
     DoToken *token = NULL;
     advanceChar(lexer);
-    // skipWhitespace(lexer);
+
+    skipWhitespace(lexer);
     // printf("%c", lexer->current_char);
     u_int32_t curr_pos = lexer->position;
     if (lexer->current_char == NULL_CHAR)
@@ -242,6 +255,14 @@ extern DoToken *DoLex(DoLexer *lexer)
             bool is_keyword = false;
             for (int i = 0; i < KEY_WORDS_SIZE; i++)
             {
+                if (strcmp(literal_or_keyword, "cmds") == 0)
+                {
+                    lexer->in_command = true;
+                }
+                else
+                {
+                    lexer->in_command = false;
+                }
                 if (strcmp(literal_or_keyword, KEY_WORDS[i].literal) == 0)
                 {
                     token = NewDoToken(KEY_WORDS[i].type, curr_pos, lexer->position + 1, lexer->line, literal_or_keyword);
@@ -277,6 +298,46 @@ extern DoToken *NewDoToken(enum DoTokenType type, u_int32_t start, u_int32_t end
     token->literal = literal;
     token->line = line_num;
     return token;
+}
+
+static void printEscaped(char *);
+static void printEscaped(char *str)
+{
+    for (int i = 0; str[i] != '\0'; i++)
+    {
+        switch (str[i])
+        {
+        case '\n':
+            printf("\\n");
+            break;
+        case '\t':
+            printf("\\t");
+            break;
+        case '\"':
+            printf("\\\"");
+            break;
+        case '\\':
+            printf("\\\\");
+            break;
+        case '\r':
+            printf("\\r");
+            break;
+        case '\0':
+            printf("\\0");
+            break;
+        default:
+            if (isprint((unsigned char)str[i]))
+            {
+                // Print normal characters as-is
+                putchar(str[i]);
+            }
+            else
+            {
+                // Print non-printable characters as hex codes
+                printf("\\x%02x", (unsigned char)str[i]);
+            }
+        }
+    }
 }
 
 extern void PrintDoToken(DoToken *token, bool print_literal)
@@ -375,7 +436,9 @@ extern void PrintDoToken(DoToken *token, bool print_literal)
 
     if (print_literal && (token->type == DoTokenString))
     {
-        printf(" : %s\n", token->literal);
+        printf(": ");
+        printEscaped(token->literal);
+        // printf(" : %s\n", token->literal);
         // if (token->type == DoTokenString)
         // {
         //     printf("Literal: \"%s\"\n", token->literal);
@@ -385,10 +448,10 @@ extern void PrintDoToken(DoToken *token, bool print_literal)
         //     printf("Literal: %s\n", token->literal);
         // }
     }
-    else
-    {
-        printf("\n");
-    }
+    printf("\n");
+    // else
+    // {
+    // }
     // printf("\n");
 }
 
