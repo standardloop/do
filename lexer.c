@@ -348,7 +348,7 @@ extern void PrintDoToken(DoToken *token, bool print_literal)
         Log(DEBUG, "PrintDoToken, input token is NULL");
         return;
     }
-    printf("Line: %u Place: %u - %u ", token->line, token->start, token->end);
+    // printf("Line: %u Place: %u - %u ", token->line, token->start, token->end);
     switch (token->type)
     {
     case DoTokenEOF:

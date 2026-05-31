@@ -163,6 +163,9 @@ extern Do *InitDo();
 extern void PrintDo(Do *);
 
 extern void FreeDo(Do *);
+extern int RunDoTask(Do *, char *);
 // ————————— PARSER END —————————
+
+// ————————— PARSER START —————————
 
 #endif

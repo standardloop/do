@@ -1,12 +1,12 @@
-namespace simple {
+namespace main {
     task hello {
         cmds {
             echo "hello!"
         }
     }
-    task test {
+    task main {
         cmds {
-            echo "test!"
+            printf main
         }
     }
 }

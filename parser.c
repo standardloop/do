@@ -188,7 +188,7 @@ static Do *parse(DoParser *parser)
     nextDoToken(parser);
     while (parser->current_token != NULL && parser->current_token->type != DoTokenEOF)
     {
-        PrintDoToken(parser->current_token, true);
+        // PrintDoToken(parser->current_token, true);
         if (parser->current_token->type == DoTokenInclude)
         {
             Log(FATAL, "parsing includes not supported yet");
@@ -209,8 +209,8 @@ static Do *parse(DoParser *parser)
         }
         nextDoToken(parser);
     }
-    PrintDoToken(parser->current_token, false);
-    // Log(FATAL, "done");
+    // PrintDoToken(parser->current_token, false);
+    //  Log(FATAL, "done");
 
     return do_var;
 }

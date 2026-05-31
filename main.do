@@ -21,6 +21,7 @@ namespace foo {
     }
 
     task foo() {
+        description = "hello"
         flags {
 
         }

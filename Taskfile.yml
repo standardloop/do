@@ -47,7 +47,7 @@ tasks:
   dependencies:logger:
     vars:
       REPO_NAME: c-logger
-      DYLIB_VERSION: 0.0.7
+      DYLIB_VERSION: 0.0.11
       DYLIB_NAME: logger
     cmds:
       - sudo -v
