@@ -6,7 +6,7 @@ namespace main {
     }
     task main {
         cmds {
-            printf main
+            printf "main\n"
         }
     }
 }

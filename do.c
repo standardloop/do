@@ -181,6 +181,8 @@ static int runTheTargetTask(DoTask *task)
         Log(FATAL, "task == NULL");
         return 1;
     }
+    PrintBuffer(task->cmds, strlen(task->cmds), true);
+    exit(0);
     // printf("%s\n", task->cmds);
     char **exec_args = stringArrToExecArgs(EveryoneExplodeNow(task->cmds, SPACE_CHAR));
     if (exec_args == NULL)

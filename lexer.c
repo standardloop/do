@@ -31,8 +31,7 @@ static const KEY_WORD KEY_WORDS[] = {
 
 static const int KEY_WORDS_SIZE = sizeof(KEY_WORDS) / sizeof(KEY_WORDS[0]);
 
-extern char *
-ReadFile(char *filename)
+extern char *ReadFile(char *filename)
 {
     FILE *file_ptr = fopen(filename, "rb");
     if (file_ptr == NULL)
@@ -144,11 +143,25 @@ static char *parseLiteralOrKeyword(DoLexer *lexer)
     }
     // char first_char = lexer->current_char;
     u_int32_t start_position = lexer->position;
+    bool in_quotes = false;
     while (ALWAYS)
     {
         // printf("%c", lexer->current_char);
+        in_quotes = lexer->current_char == DOUBLE_QUOTES_CHAR;
+
         if (lexer->in_command)
         {
+            if (lexer->current_char == NEWLINE_CHAR)
+            {
+                if (in_quotes)
+                {
+                    continue;
+                }
+                else
+                {
+                    break;
+                }
+            }
             if (lexer->current_char == NULL_CHAR || lexer->current_char == CURLY_CLOSE_CHAR)
             {
                 break;
