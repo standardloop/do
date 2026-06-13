@@ -60,6 +60,7 @@ extern char *ReadFile(char *filename)
 
 static void advanceChar(DoLexer *lexer)
 {
+    Log(TRACE, "entering advanceChar");
     if (lexer->read_position >= lexer->input_len)
     {
         lexer->current_char = NULL_CHAR;
@@ -67,17 +68,23 @@ static void advanceChar(DoLexer *lexer)
     else
     {
         lexer->current_char = lexer->input[lexer->read_position];
+        if (lexer->current_char == DOUBLE_QUOTES_CHAR)
+        {
+            lexer->in_quotes = !lexer->in_quotes;
+        }
     }
-    if (lexer->current_char == DOUBLE_QUOTES_CHAR)
-    {
-        lexer->in_quotes = !lexer->in_quotes;
-    }
+
     lexer->position = lexer->read_position;
     lexer->read_position++;
 }
 
 extern DoLexer *DoLexerInit(char *input)
 {
+    Log(TRACE, "entering DoLexerInit");
+    if (input == NULL)
+    {
+        return NULL;
+    }
     DoLexer *lexer = malloc(sizeof(DoLexer));
     if (lexer == NULL)
     {
@@ -207,6 +214,7 @@ static char *parseLiteralOrKeyword(DoLexer *lexer)
     u_int32_t literal_size;
     if (trim_last_line_whitespace)
     {
+        lexer->in_quotes = false;
         literal_size = (end_position_without_space - start_position) + 1;
     }
     else

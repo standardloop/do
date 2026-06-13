@@ -217,6 +217,7 @@ static Do *parse(DoParser *parser)
 
 extern DoParser *DoParserInit(DoLexer *lexer)
 {
+    Log(TRACE, "entering DoParserInit");
     if (lexer == NULL)
     {
         return NULL;

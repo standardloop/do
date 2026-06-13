@@ -51,10 +51,14 @@ int main(int argc, char **argv)
     // 4. Check if the user provided extra arguments without any flags
     if (optind < argc)
     {
-        fprintf(stderr, "Warning: Ignoring extra arguments starting from '%s'\n", argv[optind]);
+        Log(WARN, "Warning: Ignoring extra arguments starting from '%s'\n", argv[optind]);
     }
 
     char *buffer = ReadFile(do_file_name);
+    if (buffer == NULL)
+    {
+        Log(FATAL, "buffer from reading file %s is NULL", do_file_name);
+    }
     // printf("%s", buffer);
     // exit(1);
     InitLogger(StringToLogLevel("ERROR"), JSON_FMT, true, false, true, true);
@@ -69,8 +73,32 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-    PrintDo(do_var);
-    exit(1);
+    if (!IsCharInString(task_name, COLON_CHAR))
+    {
+        size_t current_task_name_len = strlen(task_name) + 1;
+        const size_t default_task_prefix_len = 5; // "main:" 5 (not including \0);
+        char *new_task_name_default_ns = malloc(sizeof(char) * (current_task_name_len + default_task_prefix_len));
+        if (new_task_name_default_ns == NULL)
+        {
+            Log(FATAL, "non memory for new_task_name_default_ns");
+        }
+        else
+        {
+            new_task_name_default_ns[0] = 'm';
+            new_task_name_default_ns[1] = 'a';
+            new_task_name_default_ns[2] = 'i';
+            new_task_name_default_ns[3] = 'n';
+            new_task_name_default_ns[4] = ':';
+            for (size_t i = default_task_prefix_len; i < current_task_name_len + default_task_prefix_len; i++)
+            {
+                new_task_name_default_ns[i] = task_name[i - default_task_prefix_len];
+            }
+            task_name = new_task_name_default_ns;
+        }
+    }
+
+    // PrintDo(do_var);
+    // exit(1);
     RunDoTask(do_var, task_name);
     FreeDo(do_var);
     free(buffer);
