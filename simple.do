@@ -1,12 +1,14 @@
 namespace main {
-    task hello {
-        cmds {
-            echo "hello!"
-        }
-    }
     task main {
         cmds {
-            printf "main\n"
+            x="hello"
+            echo $x
+        }
+    }
+    task test {
+        cmds {
+            x="test"
+            echo $x
         }
     }
 }

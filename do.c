@@ -150,26 +150,26 @@ static DoTask *findTargetTask(DoNamespace *target_namespace, char *task_string)
     return NULL;
 }
 
-static char **stringArrToExecArgs(StringArr *);
-static char **stringArrToExecArgs(StringArr *arr)
-{
-    if (arr == NULL || arr->num_strings == 0 || arr->strings == NULL)
-    {
-        return NULL;
-    }
-    char **return_value = malloc(sizeof(char *) * (arr->num_strings + 1)); // +1 for NULL at end
-    if (return_value == NULL)
-    {
-        return NULL;
-    }
-    int i;
-    for (i = 0; i < arr->num_strings; i++)
-    {
-        return_value[i] = arr->strings[i];
-    }
-    return_value[i] = NULL;
-    return return_value;
-}
+// static char **stringArrToExecArgs(StringArr *);
+// static char **stringArrToExecArgs(StringArr *arr)
+// {
+//     if (arr == NULL || arr->num_strings == 0 || arr->strings == NULL)
+//     {
+//         return NULL;
+//     }
+//     char **return_value = malloc(sizeof(char *) * (arr->num_strings + 1)); // +1 for NULL at end
+//     if (return_value == NULL)
+//     {
+//         return NULL;
+//     }
+//     int i;
+//     for (i = 0; i < arr->num_strings; i++)
+//     {
+//         return_value[i] = arr->strings[i];
+//     }
+//     return_value[i] = NULL;
+//     return return_value;
+// }
 
 static int runTheTargetTask(DoTask *);
 
@@ -181,14 +181,14 @@ static int runTheTargetTask(DoTask *task)
         Log(FATAL, "task == NULL");
         return 1;
     }
-    PrintBuffer(task->cmds, strlen(task->cmds), true);
-    exit(0);
-    // printf("%s\n", task->cmds);
-    char **exec_args = stringArrToExecArgs(EveryoneExplodeNow(task->cmds, SPACE_CHAR));
-    if (exec_args == NULL)
-    {
-        return -1;
-    }
+    // PrintBuffer(task->cmds, strlen(task->cmds), true);
+    //  exit(0);
+    //  // printf("%s\n", task->cmds);
+    //  char **exec_args = stringArrToExecArgs(EveryoneExplodeNow(task->cmds, SPACE_CHAR));
+    //  if (exec_args == NULL)
+    //  {
+    //      return -1;
+    //  }
     int status;
     pid_t pid = fork();
     if (pid < 0)
@@ -199,6 +199,9 @@ static int runTheTargetTask(DoTask *task)
     }
     else if (pid == CHILD_PID)
     {
+        // need to check if ONESHELL_FLAG is set
+        // ONESHELL will be default
+        char *exec_args[] = {"sh", "-c", task->cmds, NULL};
         execvp(exec_args[0], exec_args);
         Log(ERROR, "%s\n", strerror(errno));
         exit(errno);

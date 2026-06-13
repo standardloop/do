@@ -69,7 +69,8 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-    // PrintDo(do_var);
+    PrintDo(do_var);
+    exit(1);
     RunDoTask(do_var, task_name);
     FreeDo(do_var);
     free(buffer);

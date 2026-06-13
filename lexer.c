@@ -68,6 +68,10 @@ static void advanceChar(DoLexer *lexer)
     {
         lexer->current_char = lexer->input[lexer->read_position];
     }
+    if (lexer->current_char == DOUBLE_QUOTES_CHAR)
+    {
+        lexer->in_quotes = !lexer->in_quotes;
+    }
     lexer->position = lexer->read_position;
     lexer->read_position++;
 }
@@ -87,6 +91,7 @@ extern DoLexer *DoLexerInit(char *input)
     lexer->read_position = -1;
     lexer->line = 1;
     lexer->in_command = false;
+    lexer->in_quotes = false;
 
     advanceChar(lexer);
 
@@ -143,25 +148,45 @@ static char *parseLiteralOrKeyword(DoLexer *lexer)
     }
     // char first_char = lexer->current_char;
     u_int32_t start_position = lexer->position;
-    bool in_quotes = false;
+    u_int32_t end_position_without_space = lexer->position;
+    bool trim_last_line_whitespace = false;
     while (ALWAYS)
     {
         // printf("%c", lexer->current_char);
-        in_quotes = lexer->current_char == DOUBLE_QUOTES_CHAR;
-
         if (lexer->in_command)
         {
-            if (lexer->current_char == NEWLINE_CHAR)
+            if (!lexer->in_quotes)
             {
-                if (in_quotes)
+                if (lexer->current_char == NEWLINE_CHAR)
                 {
-                    continue;
-                }
-                else
-                {
-                    break;
+                    end_position_without_space = lexer->position;
+                    advanceChar(lexer);
+                    while (lexer->current_char == SPACE_CHAR)
+                    {
+                        advanceChar(lexer);
+                    }
+                    if (lexer->current_char == CURLY_CLOSE_CHAR)
+                    {
+                        trim_last_line_whitespace = true;
+                        break;
+                    }
                 }
             }
+
+            // if (lexer->current_char == SPACE_CHAR)
+            // {
+            //     if (in_quotes)
+            //     {
+            //         continue;
+            //     }
+            //     else
+            //     {
+            //         printf("pog\n");
+            //         skipWhitespace(lexer);
+            //         printf("lexer->current: %c\n", lexer->current_char);
+            //         break;
+            //     }
+            // }
             if (lexer->current_char == NULL_CHAR || lexer->current_char == CURLY_CLOSE_CHAR)
             {
                 break;
@@ -179,7 +204,16 @@ static char *parseLiteralOrKeyword(DoLexer *lexer)
 
         advanceChar(lexer);
     }
-    u_int32_t literal_size = (lexer->position - start_position) + 1;
+    u_int32_t literal_size;
+    if (trim_last_line_whitespace)
+    {
+        literal_size = (end_position_without_space - start_position) + 1;
+    }
+    else
+    {
+        literal_size = (lexer->position - start_position) + 1;
+    }
+
     char *literal = malloc(sizeof(char) * literal_size);
     if (literal == NULL)
     {
