@@ -1,4 +1,8 @@
 namespace main {
+    vars {
+        x="yes"
+        y="test"
+    }
     task main {
         cmds {
             x="hello"
@@ -7,8 +11,8 @@ namespace main {
     }
     task test {
         cmds {
-            x="test"
             echo $x
+            echo $y
         }
     }
     task build {

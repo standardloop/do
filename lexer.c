@@ -310,7 +310,7 @@ extern DoToken *DoLex(DoLexer *lexer)
             bool is_keyword = false;
             for (int i = 0; i < KEY_WORDS_SIZE; i++)
             {
-                if (strcmp(literal_or_keyword, "cmds") == 0)
+                if (strcmp(literal_or_keyword, "cmds") == 0 || strcmp(literal_or_keyword, "vars") == 0)
                 {
                     lexer->in_command = true;
                 }

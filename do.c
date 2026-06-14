@@ -171,14 +171,14 @@ static DoTask *findTargetTask(DoNamespace *target_namespace, char *task_string)
 //     return return_value;
 // }
 
-static int runTheTargetTask(DoTask *);
+static int runTheTargetTask(char *);
 
 #define CHILD_PID 0
-static int runTheTargetTask(DoTask *task)
+static int runTheTargetTask(char *task)
 {
     if (task == NULL)
     {
-        Log(FATAL, "task == NULL");
+        Log(FATAL, "ns or task is NULL");
         return 1;
     }
     // PrintBuffer(task->cmds, strlen(task->cmds), true);
@@ -199,9 +199,8 @@ static int runTheTargetTask(DoTask *task)
     }
     else if (pid == CHILD_PID)
     {
-        // need to check if ONESHELL_FLAG is set
         // ONESHELL will be default
-        char *exec_args[] = {"sh", "-c", task->cmds, NULL};
+        char *exec_args[] = {"sh", "-c", task, NULL};
         execvp(exec_args[0], exec_args);
         Log(ERROR, "%s\n", strerror(errno));
         exit(errno);
@@ -225,6 +224,49 @@ static int runTheTargetTask(DoTask *task)
         return status;
     }
     return 0;
+}
+char *createFullTaskCommand(char *, char *);
+
+char *createFullTaskCommand(char *ns_vars, char *task_cmds)
+{
+    Log(DEBUG, "entering createFullTaskCommand");
+    if (ns_vars == NULL)
+    {
+        Log(DEBUG, "ns_vars is NULL");
+        return QuickAllocatedString(task_cmds); // duplicate
+    }
+    if (task_cmds == NULL)
+    {
+        return NULL;
+    }
+    size_t ns_vars_len = strlen(ns_vars);
+    size_t task_cmds_len = strlen(task_cmds);
+
+    size_t ns_vars_task_cmds_size = ns_vars_len + task_cmds_len + 2; // newline and NULL char
+    char *ns_vars_task_cmds = malloc(sizeof(char) * ns_vars_task_cmds_size);
+    if (ns_vars_task_cmds == NULL)
+    {
+        Log(ERROR, "no memory for ns_vars_task_cmds");
+        return NULL;
+    }
+    // copy ns vars
+    size_t i = 0;
+    for (; i < ns_vars_len; i++)
+    {
+        ns_vars_task_cmds[i] = ns_vars[i];
+    }
+
+    ns_vars_task_cmds[i] = NEWLINE_CHAR;
+    i++;
+    // copy task cmds
+
+    for (size_t t = 0; t < task_cmds_len && i < ns_vars_task_cmds_size; t++)
+    {
+        ns_vars_task_cmds[i] = task_cmds[t];
+        i++;
+    }
+    ns_vars_task_cmds[i] = NULL_CHAR;
+    return ns_vars_task_cmds;
 }
 
 extern int RunDoTask(Do *do_var, char *namespace_colon_task)
@@ -254,8 +296,11 @@ extern int RunDoTask(Do *do_var, char *namespace_colon_task)
         return 1;
     }
 
-    // printf("running %s:%s...\n", target_namespace->name, target_task->name);
-    int task_return_code = runTheTargetTask(target_task);
+    char *full_task_command = createFullTaskCommand(target_namespace->vars, target_task->cmds);
+
+    // printf("running %s...\n", full_task_command);
+    int task_return_code = runTheTargetTask(full_task_command);
+    free(full_task_command);
 
     return task_return_code;
 }

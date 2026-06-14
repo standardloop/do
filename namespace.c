@@ -26,6 +26,7 @@ extern DoNamespace *InitDoNamespace(char *name)
         Log(FATAL, "couldn't allocate memory for namespace tasks");
         return NULL;
     }
+    namespace->vars = NULL;
     return namespace;
 }
 

@@ -128,8 +128,7 @@ extern void PrintDoParserErrorLine(DoParser *);
 typedef struct
 {
     char *name;
-    // DoDynArray *args;
-    char *cmds; // not sure this should be char *
+    char *cmds;
 } DoTask;
 
 extern DoTask *InitDoTask(char *);
@@ -140,7 +139,7 @@ typedef struct
     char *name;
     DoDynArray *tasks;
     // DoFlags *flags;
-    // DoVars *vars;
+    char *vars;
     // DoEnv *envs;
 } DoNamespace;
 

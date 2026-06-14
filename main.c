@@ -66,12 +66,17 @@ int main(int argc, char **argv)
     // DoLexerDebugTest(buffer, true);
     DoLexer *lexer = DoLexerInit(buffer);
     DoParser *parser = DoParserInit(lexer);
-    // FreeParser(parser);
+
     Do *do_var = ParseDo(parser);
     if (do_var == NULL)
     {
         return EXIT_FAILURE;
     }
+    // DoDynArray *ns_list = do_var->namespaces;
+    // DoNamespace *ns = ns_list->list[0];
+    // char *ns_vars = ns->vars;
+    // printf("JOSH: %s\n", (char *)ns_vars);
+    // exit(1);
 
     if (!IsCharInString(task_name, COLON_CHAR))
     {
@@ -80,7 +85,7 @@ int main(int argc, char **argv)
         char *new_task_name_default_ns = malloc(sizeof(char) * (current_task_name_len + default_task_prefix_len));
         if (new_task_name_default_ns == NULL)
         {
-            Log(FATAL, "non memory for new_task_name_default_ns");
+            Log(FATAL, "no memory for new_task_name_default_ns");
         }
         else
         {

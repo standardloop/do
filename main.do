@@ -15,12 +15,12 @@ namespace foo {
 
     }
 
-    task test(x, y) {
+    task test {
         echo $x
         echo $y
     }
 
-    task foo() {
+    task foo {
         description = "hello"
         flags {
 

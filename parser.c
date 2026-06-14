@@ -42,6 +42,43 @@ static void nextDoToken(DoParser *parser)
     parser->peek_token = DoLex(parser->lexer);
 }
 
+char *parseNSVars(DoParser *);
+char *parseNSVars(DoParser *parser)
+{
+    if (parser == NULL)
+    {
+        Log(FATAL, "parseNSVars(DoParser *parser), parser is NULL");
+        return NULL;
+    }
+    if (parser->current_token->type != DoTokenVars || parser->peek_token->type != DoTokenOpenCurlyBrace)
+    {
+        Log(FATAL, "ns vars invalid");
+        return NULL;
+    }
+
+    nextDoToken(parser);
+    if (parser->current_token->type != DoTokenOpenCurlyBrace || parser->peek_token->type != DoTokenString)
+    {
+        Log(FATAL, "ns vars invalid");
+        return NULL;
+    }
+    nextDoToken(parser);
+    if (parser->current_token->type != DoTokenString || parser->peek_token->type != DoTokenCloseCurlyBrace)
+    {
+        Log(FATAL, "ns vars invalid");
+        return NULL;
+    }
+    char *ns_vars = QuickAllocatedString(parser->current_token->literal);
+
+    nextDoToken(parser);
+    if (parser->current_token->type != DoTokenCloseCurlyBrace)
+    {
+        Log(FATAL, "ns vars invalid");
+        return NULL;
+    }
+    return ns_vars;
+}
+
 static DoNamespace *parseDoNamespace(DoParser *parser)
 {
     if (parser == NULL)
@@ -78,6 +115,28 @@ static DoNamespace *parseDoNamespace(DoParser *parser)
         if (parser->current_token->type == DoTokenEOF || parser->current_token->type == DoTokenIllegal || parser->obj_nested == 0)
         {
             break;
+        }
+        else if (parser->current_token->type == DoTokenVars)
+        {
+            char *ns_vars = parseNSVars(parser);
+            if (ns_vars == NULL)
+            {
+                Log(FATAL, "ns_vars returned NULL");
+                FreeDoNamespace(namespace);
+                return NULL;
+            }
+            else
+            {
+                Log(TRACE, "parsed a task, adding it to namespace->tasks");
+                if (namespace->vars != NULL)
+                {
+                    Log(FATAL, "Only 1 global vars is allowed");
+                    FreeDoNamespace(namespace);
+                    return NULL;
+                }
+                namespace->vars = ns_vars;
+                // Log(INFO, "%d", namespace->tasks->size);
+            }
         }
         else if (parser->current_token->type == DoTokenTask)
         {
