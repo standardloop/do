@@ -60,3 +60,4 @@ do-sanitize
 .task
 *.txt
 build/
+do-from-do

@@ -6,7 +6,7 @@ vars:
   CC_FLAGS: "-Werror -Wextra -Wall -Wfree-nonheap-object -std=c17"
   EXECUTABLE_NAME: do
   DYN_LIBS_USED_PATH: "-L/usr/local/lib/standardloop"
-  DYN_LIBS_USED: "-pthread -lstandardloop-logger -lstandardloop-util -lstandardloop-json"
+  DYN_LIBS_USED: "-pthread -lstandardloop-logger -lstandardloop-util"
   SOURCE_FILES:
     - main.c
     - lexer.c
@@ -42,7 +42,6 @@ tasks:
     deps:
       - dependencies:logger
       - dependencies:util
-      - dependencies:json
 
   dependencies:logger:
     vars:
@@ -67,22 +66,6 @@ tasks:
     status:
       - otool -L /usr/local/lib/standardloop/libstandardloop-{{.DYLIB_NAME}}.dylib | head -n 2 | tail -n 1 | grep "current version {{.DYLIB_VERSION}}"
       - cat /usr/local/include/standardloop/{{.DYLIB_NAME}}.h | grep "STANDARDLOOP_{{.DYLIB_NAME | upper}}_H_VERSION \"{{.DYLIB_VERSION}}\""
-
-  dependencies:json:
-    vars:
-      REPO_NAME: c-json
-      DYLIB_VERSION: 0.0.2
-      DYLIB_NAME: json
-    cmds:
-      - sudo -v
-      - *download-dependency
-    status:
-      - otool -L /usr/local/lib/standardloop/libstandardloop-{{.DYLIB_NAME}}.dylib | head -n 2 | tail -n 1 | grep "current version {{.DYLIB_VERSION}}"
-      - cat /usr/local/include/standardloop/{{.DYLIB_NAME}}.h | grep "STANDARDLOOP_{{.DYLIB_NAME | upper}}_H_VERSION \"{{.DYLIB_VERSION}}\""
-
-  # dependencies:clean:
-  #   cmds:
-
 
   build:
     deps:
@@ -147,13 +130,11 @@ tasks:
       - build
     cmds:
       - cp /usr/local/lib/standardloop/libstandardloop-util.dylib ./ # to get around sips we need to move dylibs to local dir :(
-      - cp /usr/local/lib/standardloop/libstandardloop-json.dylib ./ # to get around sips we need to move dylibs to local dir :(
       - cp /usr/local/lib/standardloop/libstandardloop-logger.dylib ./ # to get around sips we need to move dylibs to local dir :(
 
   leaks:clean:
     cmds:
       - rm -f libstandardloop-logger.dylib
-      - rm -f libstandardloop-json.dylib
       - rm -f libstandardloop-util.dylib
 
   leaks:run:

@@ -1,5 +1,11 @@
 namespace main {
     vars {
+        CC="gcc"
+        FLAGS="-Werror -Wextra -Wall -Wfree-nonheap-object -std=c17"
+        SOURCES="main.c  lexer.c  parser.c  do.c  dynamicarray.c  task.c  namespace.c"
+        DLIB_PATH="-L/usr/local/lib/standardloop"
+        DLIBS="-lstandardloop-logger -lstandardloop-util"
+        OUPUT_BINARY="do-from-do"
         x="yes"
         y="test"
     }
@@ -17,11 +23,8 @@ namespace main {
     }
     task build {
         cmds {
-            gcc -Werror -Wextra -Wall -Wfree-nonheap-object -std=c17 \
-                main.c  lexer.c  parser.c  do.c  dynamicarray.c  task.c  namespace.c  \
-                -L/usr/local/lib/standardloop \
-                -pthread -lstandardloop-logger -lstandardloop-util -lstandardloop-json \
-                -o do-from-do
+            $CC $FLAGS $SOURCES $DLIB_PATH $DLIBS \
+                -o $OUPUT_BINARY
         }
     }
 }
