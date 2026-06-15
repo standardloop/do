@@ -338,13 +338,11 @@ static char *checkAndAdd(Do *do_var, char *task_cmds)
         }
         else
         {
-            // printf("josh: %s\n", line_copy);
-            // exit(1);
             return_value = concateStringsWithNewlineInMiddle(return_value, line_copy);
         }
+        FreeStringArr(split_each_line_by_space);
     }
-    // printf("return_value: %s\n", return_value);
-    // exit(1);
+    FreeStringArr(split_cmds_by_newline);
     return return_value;
 }
 
