@@ -21,10 +21,17 @@ namespace main {
             echo $y
         }
     }
+    task call {
+        cmds {
+            test
+            echo $x
+            echo $x
+            echo $x
+        }
+    }
     task build {
         cmds {
-            $CC $FLAGS $SOURCES $DLIB_PATH $DLIBS \
-                -o $OUPUT_BINARY
+            $CC $FLAGS $SOURCES $DLIB_PATH $DLIBS -o $OUPUT_BINARY
         }
     }
 }

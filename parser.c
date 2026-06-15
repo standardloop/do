@@ -161,6 +161,55 @@ static DoNamespace *parseDoNamespace(DoParser *parser)
     return namespace;
 }
 
+static char *cleanSpacesFromTaskCmds(char *);
+static char *cleanSpacesFromTaskCmds(char *task_cmds)
+{
+    Log(TRACE, "entering cleanSpacesFromTaskCmds");
+    if (task_cmds == NULL)
+    {
+        Log(FATAL, "task_cmds in cleanSpacesFromTaskCmds is NULL!");
+        return NULL;
+    }
+    char *read_ptr = task_cmds;
+    char *write_ptr = task_cmds;
+    bool at_line_start = true;
+
+    while (*read_ptr != '\0')
+    {
+        if (at_line_start)
+        {
+            if (isspace((unsigned char)*read_ptr))
+            {
+                if (*read_ptr == '\n')
+                {
+                    *write_ptr = *read_ptr;
+                    write_ptr++;
+                }
+                read_ptr++;
+                continue;
+            }
+            else
+            {
+                at_line_start = false;
+            }
+        }
+
+        if (*read_ptr == '\n')
+        {
+            at_line_start = true;
+        }
+        *write_ptr = *read_ptr;
+        write_ptr++;
+        read_ptr++;
+    }
+
+    *write_ptr = '\0';
+
+    // printf("%s\n", task_cmds);
+    // exit(1);
+    return task_cmds;
+}
+
 static DoTask *parseTask(DoParser *parser)
 {
     if (parser == NULL)
@@ -218,7 +267,8 @@ static DoTask *parseTask(DoParser *parser)
         return NULL;
     }
     char *task_cmds = QuickAllocatedString(parser->current_token->literal);
-    task->cmds = task_cmds;
+    char *task_cmds_with_no_extra_white_space = cleanSpacesFromTaskCmds(task_cmds);
+    task->cmds = task_cmds_with_no_extra_white_space;
     // Log(INFO, "%s", task->cmds);
     nextDoToken(parser);
     if (parser->current_token->type != DoTokenCloseCurlyBrace) // || parser->obj_nested != FIXME)

@@ -65,8 +65,8 @@ extern void PrintDo(Do *do_var)
     }
 }
 
-static StringArr *separateNameSpaceAndTask(char *);
-static StringArr *separateNameSpaceAndTask(char *namespace_colon_task)
+static StringArr *separateNamespaceAndTask(char *);
+static StringArr *separateNamespaceAndTask(char *namespace_colon_task)
 {
     StringArr *namespace_colon_task_str_arr = EveryoneExplodeNow(namespace_colon_task, COLON_CHAR);
 
@@ -225,11 +225,44 @@ static int runTheTargetTask(char *task)
     }
     return 0;
 }
-char *createFullTaskCommand(char *, char *);
+static char *addNamespaceVarsToCmds(char *, char *);
 
-char *createFullTaskCommand(char *ns_vars, char *task_cmds)
+static char *concateStringsWithNewlineInMiddle(char *, char *);
+static char *concateStringsWithNewlineInMiddle(char *first_str, char *second_str)
 {
-    Log(DEBUG, "entering createFullTaskCommand");
+    size_t first_str_len = strlen(first_str);
+    size_t second_str_len = strlen(second_str);
+
+    size_t concate_str_length = first_str_len + second_str_len + 2; // newline and NULL char
+    char *concate_str = malloc(sizeof(char) * concate_str_length);
+    if (concate_str == NULL)
+    {
+        Log(ERROR, "no memory for concate_str");
+        return NULL;
+    }
+    // copy first str
+    size_t i = 0;
+    for (; i < first_str_len; i++)
+    {
+        concate_str[i] = first_str[i];
+    }
+
+    concate_str[i] = NEWLINE_CHAR;
+    i++;
+
+    // copy second
+    for (size_t t = 0; t < second_str_len && i < concate_str_length; t++)
+    {
+        concate_str[i] = second_str[t];
+        i++;
+    }
+    concate_str[i] = NULL_CHAR;
+    return concate_str;
+}
+
+static char *addNamespaceVarsToCmds(char *ns_vars, char *task_cmds)
+{
+    Log(DEBUG, "entering addNamespaceVarsToCmds");
     if (ns_vars == NULL)
     {
         Log(DEBUG, "ns_vars is NULL");
@@ -239,34 +272,80 @@ char *createFullTaskCommand(char *ns_vars, char *task_cmds)
     {
         return NULL;
     }
-    size_t ns_vars_len = strlen(ns_vars);
-    size_t task_cmds_len = strlen(task_cmds);
+    char *concate_str = concateStringsWithNewlineInMiddle(ns_vars, task_cmds);
 
-    size_t ns_vars_task_cmds_size = ns_vars_len + task_cmds_len + 2; // newline and NULL char
-    char *ns_vars_task_cmds = malloc(sizeof(char) * ns_vars_task_cmds_size);
-    if (ns_vars_task_cmds == NULL)
+    return concate_str;
+}
+
+static char *checkAndAdd(Do *, char *);
+// ok
+// we need to see if the task cmds contains another task name
+static char *checkAndAdd(Do *do_var, char *task_cmds)
+{
+    // TODO
+    // pass taskname in too to make sure a task doesn't call itself
+    Log(TRACE, "entering checkAndAdd");
+    if (do_var == NULL || task_cmds == NULL)
     {
-        Log(ERROR, "no memory for ns_vars_task_cmds");
+        Log(FATAL, "checkAndAdd, invalid args");
         return NULL;
     }
-    // copy ns vars
-    size_t i = 0;
-    for (; i < ns_vars_len; i++)
+    StringArr *split_cmds_by_newline = EveryoneExplodeNow(task_cmds, NEWLINE_CHAR);
+    if (split_cmds_by_newline == NULL)
     {
-        ns_vars_task_cmds[i] = ns_vars[i];
+        return NULL;
     }
 
-    ns_vars_task_cmds[i] = NEWLINE_CHAR;
-    i++;
-    // copy task cmds
-
-    for (size_t t = 0; t < task_cmds_len && i < ns_vars_task_cmds_size; t++)
+    char *return_value = QuickAllocatedString("\0");
+    char *called_task_cmds_copy = NULL;
+    // run through all lines of the cmd
+    for (int i = 0; i < split_cmds_by_newline->num_strings; i++)
     {
-        ns_vars_task_cmds[i] = task_cmds[t];
-        i++;
+        char *line_copy = QuickAllocatedString(split_cmds_by_newline->strings[i]);
+        StringArr *split_each_line_by_space = EveryoneExplodeNow(split_cmds_by_newline->strings[i], SPACE_CHAR);
+        // printf("JOSH %s\n", split_cmds_by_newline->strings[i]);
+        // TODO -> check NULL
+        char *possible_other_task = split_each_line_by_space->strings[0];
+        // run through all namespaces to check if task exists
+        for (size_t j = 0; j < do_var->namespaces->size; j++)
+        {
+            DoNamespace *check_ns = do_var->namespaces->list[j];
+            for (size_t k = 0; k < check_ns->tasks->size; k++)
+            {
+                DoTask *check_task = check_ns->tasks->list[k];
+                if (strcmp(possible_other_task, check_task->name) == 0)
+                {
+                    // need to remove the task name and
+                    // add the cmds of the task that was calld
+                    // this needs to be done recursivily so that
+                    // subsequently called tasks also fill in theres.
+                    // printf("pog\n");
+
+                    called_task_cmds_copy = QuickAllocatedString(check_task->cmds);
+                    // called_task_cmds_copy = checkAndAdd(do_var, called_task_cmds_copy);
+                    break;
+                }
+                called_task_cmds_copy = NULL;
+            }
+            if (called_task_cmds_copy != NULL)
+            {
+                break;
+            }
+        }
+        if (called_task_cmds_copy != NULL)
+        {
+            return_value = concateStringsWithNewlineInMiddle(return_value, called_task_cmds_copy);
+        }
+        else
+        {
+            // printf("josh: %s\n", line_copy);
+            // exit(1);
+            return_value = concateStringsWithNewlineInMiddle(return_value, line_copy);
+        }
     }
-    ns_vars_task_cmds[i] = NULL_CHAR;
-    return ns_vars_task_cmds;
+    // printf("return_value: %s\n", return_value);
+    // exit(1);
+    return return_value;
 }
 
 extern int RunDoTask(Do *do_var, char *namespace_colon_task)
@@ -276,7 +355,7 @@ extern int RunDoTask(Do *do_var, char *namespace_colon_task)
         Log(FATAL, "do_var == NULL || namespace_colon_task == NULL");
         return 1;
     }
-    StringArr *namespace_colon_task_str_arr = separateNameSpaceAndTask(namespace_colon_task);
+    StringArr *namespace_colon_task_str_arr = separateNamespaceAndTask(namespace_colon_task);
 
     char *namespace_string = namespace_colon_task_str_arr->strings[0];
     DoNamespace *target_namespace = findTargetNamespace(do_var, namespace_string);
@@ -292,15 +371,18 @@ extern int RunDoTask(Do *do_var, char *namespace_colon_task)
     if (target_task == NULL)
     {
         FreeStringArr(namespace_colon_task_str_arr);
-        Log(FATAL, "target_task== NULL");
+        Log(FATAL, "target_task == NULL");
         return 1;
     }
 
-    char *full_task_command = createFullTaskCommand(target_namespace->vars, target_task->cmds);
+    // if a task's cmds runs another task, we need to add concate those
+    char *full_task_cmds = checkAndAdd(do_var, target_task->cmds);
 
-    // printf("running %s...\n", full_task_command);
-    int task_return_code = runTheTargetTask(full_task_command);
-    free(full_task_command);
+    char *full_task_with_vars_cmds = addNamespaceVarsToCmds(target_namespace->vars, full_task_cmds);
+
+    // printf("running %s...\n", full_task_with_vars_cmds);
+    int task_return_code = runTheTargetTask(full_task_with_vars_cmds);
+    free(full_task_with_vars_cmds);
 
     return task_return_code;
 }

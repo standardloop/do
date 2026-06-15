@@ -97,7 +97,7 @@ extern DoLexer *DoLexerInit(char *input)
     lexer->position = -2;
     lexer->read_position = -1;
     lexer->line = 1;
-    lexer->in_command = false;
+    lexer->in_task_cmds_section = false;
     lexer->in_quotes = false;
 
     advanceChar(lexer);
@@ -159,8 +159,8 @@ static char *parseLiteralOrKeyword(DoLexer *lexer)
     bool trim_last_line_whitespace = false;
     while (ALWAYS)
     {
-        // printf("%c", lexer->current_char);
-        if (lexer->in_command)
+
+        if (lexer->in_task_cmds_section)
         {
             if (!lexer->in_quotes)
             {
@@ -179,21 +179,6 @@ static char *parseLiteralOrKeyword(DoLexer *lexer)
                     }
                 }
             }
-
-            // if (lexer->current_char == SPACE_CHAR)
-            // {
-            //     if (in_quotes)
-            //     {
-            //         continue;
-            //     }
-            //     else
-            //     {
-            //         printf("pog\n");
-            //         skipWhitespace(lexer);
-            //         printf("lexer->current: %c\n", lexer->current_char);
-            //         break;
-            //     }
-            // }
             if (lexer->current_char == NULL_CHAR || lexer->current_char == CURLY_CLOSE_CHAR)
             {
                 break;
@@ -312,11 +297,11 @@ extern DoToken *DoLex(DoLexer *lexer)
             {
                 if (strcmp(literal_or_keyword, "cmds") == 0 || strcmp(literal_or_keyword, "vars") == 0)
                 {
-                    lexer->in_command = true;
+                    lexer->in_task_cmds_section = true;
                 }
                 else
                 {
-                    lexer->in_command = false;
+                    lexer->in_task_cmds_section = false;
                 }
                 if (strcmp(literal_or_keyword, KEY_WORDS[i].literal) == 0)
                 {

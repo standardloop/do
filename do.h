@@ -92,7 +92,7 @@ typedef struct
     u_int32_t position;
     u_int32_t read_position;
     u_int32_t line;
-    bool in_command;
+    bool in_task_cmds_section;
     bool in_quotes;
 } DoLexer;
 
