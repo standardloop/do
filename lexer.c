@@ -20,7 +20,7 @@ typedef struct
 static const KEY_WORD KEY_WORDS[] = {
     {.literal = "include", .type = DoTokenInclude},
     {.literal = "namespace", .type = DoTokenNamespace},
-    {.literal = "status", .type = DoTokenStatus},
+    {.literal = "check", .type = DoTokenCheck},
     {.literal = "cmds", .type = DoTokenCmds},
     {.literal = "flags", .type = DoTokenFlags},
     {.literal = "deps", .type = DoTokenDeps},
@@ -295,7 +295,7 @@ extern DoToken *DoLex(DoLexer *lexer)
             bool is_keyword = false;
             for (int i = 0; i < KEY_WORDS_SIZE; i++)
             {
-                if (strcmp(literal_or_keyword, "cmds") == 0 || strcmp(literal_or_keyword, "vars") == 0)
+                if (strcmp(literal_or_keyword, "cmds") == 0 || strcmp(literal_or_keyword, "vars") == 0 || strcmp(literal_or_keyword, "check") == 0)
                 {
                     lexer->in_task_cmds_section = true;
                 }
@@ -448,8 +448,8 @@ extern void PrintDoToken(DoToken *token, bool print_literal)
     case DoTokenCmds:
         printf("DoTokenCmds");
         break;
-    case DoTokenStatus:
-        printf("DoTokenStatus");
+    case DoTokenCheck:
+        printf("DoTokenCheck");
         break;
     case DoTokenSpace:
         printf("DoTokenSpace");
@@ -546,7 +546,7 @@ extern void FreeDoToken(DoToken *token)
         return;
     }
 
-    if (token->type == DoTokenInclude || token->type == DoTokenNamespace || token->type == DoTokenStatus ||
+    if (token->type == DoTokenInclude || token->type == DoTokenNamespace || token->type == DoTokenCheck ||
         token->type == DoTokenCmds || token->type == DoTokenFlags || token->type == DoTokenDeps ||
         token->type == DoTokenTask || token->type == DoTokenVars || token->type == DoTokenEnv || token->type == DoTokenString)
     {

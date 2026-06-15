@@ -16,6 +16,7 @@ extern DoTask *InitDoTask(char *name)
     DoTask *task = malloc(sizeof(DoTask));
     task->name = name;
     task->cmds = NULL;
+    task->check_cmds = NULL;
     return task;
 }
 

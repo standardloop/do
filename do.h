@@ -65,7 +65,7 @@ enum DoTokenType
     DoTokenDeps,
     DoTokenFlags,
     DoTokenCmds,
-    DoTokenStatus,
+    DoTokenCheck,
     DoTokenSpace,
     DoTokenTab,
     DoTokenNewline,
@@ -128,6 +128,7 @@ extern void PrintDoParserErrorLine(DoParser *);
 typedef struct
 {
     char *name;
+    char *check_cmds;
     char *cmds;
 } DoTask;
 

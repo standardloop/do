@@ -18,20 +18,28 @@ namespace main {
     task test {
         cmds {
             echo $x
-            echo $y
+            echo "from task test"
         }
     }
     task call {
         cmds {
             test
-            echo $x
-            echo $x
-            echo $x
+            echo "from task call"
+            x="override"
+            test
         }
     }
     task build {
         cmds {
             $CC $FLAGS $SOURCES $DLIB_PATH $DLIBS -o $OUPUT_BINARY
+        }
+    }
+    task other {
+        check {
+            exit 0
+        }
+        cmds {
+            echo "inside other task"
         }
     }
 }

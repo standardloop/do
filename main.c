@@ -10,6 +10,37 @@ const char *message = "User: do [flags...] [task...]\n"
                       "Runs the specified task.\n"
                       "";
 
+static char *addDefaultNamespaceToTask(char *);
+
+static char *addDefaultNamespaceToTask(char *task_name)
+{
+    char *return_value = task_name;
+    if (!IsCharInString(task_name, COLON_CHAR))
+    {
+        size_t current_task_name_len = strlen(task_name) + 1;
+        const size_t default_task_prefix_len = 5; // "main:" 5 (not including \0);
+        char *new_task_name_default_ns = malloc(sizeof(char) * (current_task_name_len + default_task_prefix_len));
+        if (new_task_name_default_ns == NULL)
+        {
+            Log(FATAL, "no memory for new_task_name_default_ns");
+        }
+        else
+        {
+            new_task_name_default_ns[0] = 'm';
+            new_task_name_default_ns[1] = 'a';
+            new_task_name_default_ns[2] = 'i';
+            new_task_name_default_ns[3] = 'n';
+            new_task_name_default_ns[4] = ':';
+            for (size_t i = default_task_prefix_len; i < current_task_name_len + default_task_prefix_len; i++)
+            {
+                new_task_name_default_ns[i] = task_name[i - default_task_prefix_len];
+            }
+            return_value = new_task_name_default_ns;
+        }
+    }
+    return return_value;
+}
+
 int main(int argc, char **argv)
 {
     int opt;
@@ -39,16 +70,13 @@ int main(int argc, char **argv)
     if (do_file_name == NULL)
     {
         do_file_name = "./main.do";
-        // return 1;
     }
 
-    // 3. Validate that the required -t flag was provided
     if (task_name == NULL)
     {
         task_name = "main:main";
     }
 
-    // 4. Check if the user provided extra arguments without any flags
     if (optind < argc)
     {
         Log(WARN, "Warning: Ignoring extra arguments starting from '%s'\n", argv[optind]);
@@ -59,8 +87,7 @@ int main(int argc, char **argv)
     {
         Log(FATAL, "buffer from reading file %s is NULL", do_file_name);
     }
-    // printf("%s", buffer);
-    // exit(1);
+
     InitLogger(StringToLogLevel("ERROR"), JSON_FMT, true, false, true, true);
 
     // DoLexerDebugTest(buffer, true);
@@ -72,38 +99,7 @@ int main(int argc, char **argv)
     {
         return EXIT_FAILURE;
     }
-    // DoDynArray *ns_list = do_var->namespaces;
-    // DoNamespace *ns = ns_list->list[0];
-    // char *ns_vars = ns->vars;
-    // printf("JOSH: %s\n", (char *)ns_vars);
-    // exit(1);
-
-    if (!IsCharInString(task_name, COLON_CHAR))
-    {
-        size_t current_task_name_len = strlen(task_name) + 1;
-        const size_t default_task_prefix_len = 5; // "main:" 5 (not including \0);
-        char *new_task_name_default_ns = malloc(sizeof(char) * (current_task_name_len + default_task_prefix_len));
-        if (new_task_name_default_ns == NULL)
-        {
-            Log(FATAL, "no memory for new_task_name_default_ns");
-        }
-        else
-        {
-            new_task_name_default_ns[0] = 'm';
-            new_task_name_default_ns[1] = 'a';
-            new_task_name_default_ns[2] = 'i';
-            new_task_name_default_ns[3] = 'n';
-            new_task_name_default_ns[4] = ':';
-            for (size_t i = default_task_prefix_len; i < current_task_name_len + default_task_prefix_len; i++)
-            {
-                new_task_name_default_ns[i] = task_name[i - default_task_prefix_len];
-            }
-            task_name = new_task_name_default_ns;
-        }
-    }
-
-    // PrintDo(do_var);
-    // exit(1);
+    task_name = addDefaultNamespaceToTask(task_name);
     RunDoTask(do_var, task_name);
     FreeDo(do_var);
     free(buffer);

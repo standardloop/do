@@ -319,9 +319,12 @@ static char *checkAndAdd(Do *do_var, char *task_cmds)
                     // add the cmds of the task that was calld
                     // this needs to be done recursivily so that
                     // subsequently called tasks also fill in theres.
-                    // printf("pog\n");
+
+                    // TODO
+                    // we need to use if the check_task has a status check not
 
                     called_task_cmds_copy = QuickAllocatedString(check_task->cmds);
+
                     // called_task_cmds_copy = checkAndAdd(do_var, called_task_cmds_copy);
                     break;
                 }
