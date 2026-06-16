@@ -97,6 +97,7 @@ int main(int argc, char **argv)
     Do *do_var = ParseDo(parser);
     if (do_var == NULL)
     {
+        Log(FATAL, "couldn't parser do");
         return EXIT_FAILURE;
     }
     task_name = addDefaultNamespaceToTask(task_name);

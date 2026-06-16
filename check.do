@@ -1,7 +1,7 @@
 namespace main {
     task main {
         check {
-            exit 0
+            exit 1;
         }
         cmds {
             echo "inside other task"

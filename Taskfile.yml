@@ -3,7 +3,7 @@ version: '3'
 
 vars:
   CC: gcc
-  CC_FLAGS: "-Werror -Wextra -Wall -Wfree-nonheap-object -std=c17"
+  CC_FLAGS: "-g -Werror -Wextra -Wall -Wfree-nonheap-object -std=c17"
   EXECUTABLE_NAME: do
   DYN_LIBS_USED_PATH: "-L/usr/local/lib/standardloop"
   DYN_LIBS_USED: "-pthread -lstandardloop-logger -lstandardloop-util"

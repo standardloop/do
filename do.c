@@ -364,7 +364,7 @@ extern int RunDoTask(Do *do_var, char *namespace_colon_task)
     if (target_namespace == NULL)
     {
         FreeStringArr(namespace_colon_task_str_arr);
-        Log(FATAL, "target_namespace== NULL");
+        Log(FATAL, "target_namespace == NULL");
         return 1;
     }
     char *task_string = namespace_colon_task_str_arr->strings[1];
@@ -375,15 +375,35 @@ extern int RunDoTask(Do *do_var, char *namespace_colon_task)
         Log(FATAL, "target_task == NULL");
         return 1;
     }
+    // if there is a status, we need to run the status first
+    bool run_task_cmds = true;
+    if (target_task->check_cmds != NULL)
+    {
+        char *full_task_check_cmds = checkAndAdd(do_var, target_task->check_cmds);
+        char *full_task_with_vars_check_cmds = addNamespaceVarsToCmds(target_namespace->vars, full_task_check_cmds);
+        int task_status_return_code = runTheTargetTask(full_task_with_vars_check_cmds);
+        run_task_cmds = task_status_return_code != 0;
+        free(full_task_with_vars_check_cmds);
+        // printf("status: %d\n", task_status_return_code);
+        // exit(10);
+    }
 
-    // if a task's cmds runs another task, we need to add concate those
-    char *full_task_cmds = checkAndAdd(do_var, target_task->cmds);
+    int task_return_code = 0;
+    if (run_task_cmds)
+    {
+        // if a task's cmds runs another task, we need to add concate those
+        char *full_task_cmds = checkAndAdd(do_var, target_task->cmds);
 
-    char *full_task_with_vars_cmds = addNamespaceVarsToCmds(target_namespace->vars, full_task_cmds);
+        char *full_task_with_vars_cmds = addNamespaceVarsToCmds(target_namespace->vars, full_task_cmds);
 
-    // printf("running %s...\n", full_task_with_vars_cmds);
-    int task_return_code = runTheTargetTask(full_task_with_vars_cmds);
-    free(full_task_with_vars_cmds);
+        // printf("running %s...\n", full_task_with_vars_cmds);
+        task_return_code = runTheTargetTask(full_task_with_vars_cmds);
+        free(full_task_with_vars_cmds);
+    }
+    else
+    {
+        printf("task %s is up to date, nothing to run!\n", target_task->name);
+    }
 
     return task_return_code;
 }
