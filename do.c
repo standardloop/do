@@ -280,6 +280,7 @@ static char *addNamespaceVarsToCmds(char *ns_vars, char *task_cmds)
 static char *checkAndAdd(Do *, char *);
 // ok
 // we need to see if the task cmds contains another task name
+// TODO we need to worry about checks as well
 static char *checkAndAdd(Do *do_var, char *task_cmds)
 {
     // TODO

@@ -1,10 +1,26 @@
 namespace main {
-    task main {
+    task run {
         check {
             exit 1;
         }
         cmds {
-            echo "inside other task"
+            echo "this task will run"
+        }
+    }
+    task norun {
+        check {
+            exit 0;
+        }
+        cmds {
+            echo "this task will not run"
+        }
+    }
+    task runwithother {
+        check {
+            norun
+        }
+        cmds {
+            echo "what will happen?"
         }
     }
 }
