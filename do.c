@@ -171,12 +171,12 @@ static DoTask *findTargetTask(DoNamespace *target_namespace, char *task_string)
 //     return return_value;
 // }
 
-static int runTheTargetTask(char *);
+static int runCmds(char *);
 
 #define CHILD_PID 0
-static int runTheTargetTask(char *task)
+static int runCmds(char *cmds)
 {
-    if (task == NULL)
+    if (cmds == NULL)
     {
         Log(FATAL, "ns or task is NULL");
         return 1;
@@ -200,7 +200,7 @@ static int runTheTargetTask(char *task)
     else if (pid == CHILD_PID)
     {
         // ONESHELL will be default
-        char *exec_args[] = {"sh", "-c", task, NULL};
+        char *exec_args[] = {"sh", "-c", cmds, NULL};
         execvp(exec_args[0], exec_args);
         Log(ERROR, "%s\n", strerror(errno));
         exit(errno);
@@ -221,7 +221,7 @@ static int runTheTargetTask(char *task)
         {
             Log(ERROR, "Child terminated abnormally for another reason\n");
         }
-        return status;
+        return WEXITSTATUS(status);
     }
     return 0;
 }
@@ -277,18 +277,18 @@ static char *addNamespaceVarsToCmds(char *ns_vars, char *task_cmds)
     return concate_str;
 }
 
-static char *checkAndAdd(Do *, char *);
+static char *checkAndReplaceTaskReferences(Do *, char *);
 // ok
 // we need to see if the task cmds contains another task name
 // TODO we need to worry about checks as well
-static char *checkAndAdd(Do *do_var, char *task_cmds)
+static char *checkAndReplaceTaskReferences(Do *do_var, char *task_cmds)
 {
     // TODO
     // pass taskname in too to make sure a task doesn't call itself
-    Log(TRACE, "entering checkAndAdd");
+    Log(TRACE, "entering checkAndReplaceTaskReferences");
     if (do_var == NULL || task_cmds == NULL)
     {
-        Log(FATAL, "checkAndAdd, invalid args");
+        Log(FATAL, "checkAndReplaceTaskReferences, invalid args");
         return NULL;
     }
     StringArr *split_cmds_by_newline = EveryoneExplodeNow(task_cmds, NEWLINE_CHAR);
@@ -326,7 +326,7 @@ static char *checkAndAdd(Do *do_var, char *task_cmds)
 
                     called_task_cmds_copy = QuickAllocatedString(check_task->cmds);
 
-                    // called_task_cmds_copy = checkAndAdd(do_var, called_task_cmds_copy);
+                    // called_task_cmds_copy = checkAndReplaceTaskReferences(do_var, called_task_cmds_copy);
                     break;
                 }
                 called_task_cmds_copy = NULL;
@@ -376,13 +376,13 @@ extern int RunDoTask(Do *do_var, char *namespace_colon_task)
         Log(FATAL, "target_task == NULL");
         return 1;
     }
-    // if there is a status, we need to run the status first
+    // if there is a status, we need to run the status first to see if the task cmds need to be ran
     bool run_task_cmds = true;
     if (target_task->check_cmds != NULL)
     {
-        char *full_task_check_cmds = checkAndAdd(do_var, target_task->check_cmds);
+        char *full_task_check_cmds = checkAndReplaceTaskReferences(do_var, target_task->check_cmds);
         char *full_task_with_vars_check_cmds = addNamespaceVarsToCmds(target_namespace->vars, full_task_check_cmds);
-        int task_status_return_code = runTheTargetTask(full_task_with_vars_check_cmds);
+        int task_status_return_code = runCmds(full_task_with_vars_check_cmds);
         run_task_cmds = task_status_return_code != 0;
         free(full_task_with_vars_check_cmds);
         // printf("status: %d\n", task_status_return_code);
@@ -393,12 +393,10 @@ extern int RunDoTask(Do *do_var, char *namespace_colon_task)
     if (run_task_cmds)
     {
         // if a task's cmds runs another task, we need to add concate those
-        char *full_task_cmds = checkAndAdd(do_var, target_task->cmds);
-
+        char *full_task_cmds = checkAndReplaceTaskReferences(do_var, target_task->cmds);
         char *full_task_with_vars_cmds = addNamespaceVarsToCmds(target_namespace->vars, full_task_cmds);
-
         // printf("running %s...\n", full_task_with_vars_cmds);
-        task_return_code = runTheTargetTask(full_task_with_vars_cmds);
+        task_return_code = runCmds(full_task_with_vars_cmds);
         free(full_task_with_vars_cmds);
     }
     else

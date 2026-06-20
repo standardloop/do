@@ -15,7 +15,7 @@ namespace main {
             echo "this task will not run"
         }
     }
-    task runwithother {
+    task checkcallsnorun {
         check {
             norun
         }
