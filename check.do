@@ -23,22 +23,22 @@ namespace main {
             echo "what will happen?"
         }
     }
-    task base {
+    task baseone {
         cmds {
             echo "base"
         }
     }
     task basetwo {
         cmds {
-            base
-            base
+            baseone
+            baseone
         }
     }
     task runother {
         cmds {
-            base
+            baseone
             basetwo
-            base
+            basetwo
             basetwo
         }
     }

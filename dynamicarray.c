@@ -5,7 +5,6 @@
 #include <errno.h>
 
 #include "./do.h"
-#include <standardloop/logger.h>
 
 static inline bool isDoDynArrayFull(DoDynArray *);
 // static inline bool isDoDynArrayEmpty(DoDynArray *);

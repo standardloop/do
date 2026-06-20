@@ -5,7 +5,6 @@
 
 #include "./do.h"
 
-#include <standardloop/logger.h>
 
 static void advanceChar(DoLexer *);
 static void backtrackChar(DoLexer *);

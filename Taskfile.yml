@@ -2,7 +2,7 @@
 version: '3'
 
 vars:
-  CC: gcc
+  CC: clang
   CC_FLAGS: "-g -Werror -Wextra -Wall -Wfree-nonheap-object -std=c17"
   EXECUTABLE_NAME: do
   DYN_LIBS_USED_PATH: "-L/usr/local/lib/standardloop"
@@ -46,7 +46,7 @@ tasks:
   dependencies:logger:
     vars:
       REPO_NAME: c-logger
-      DYLIB_VERSION: 0.0.11
+      DYLIB_VERSION: 0.0.17
       DYLIB_NAME: logger
     cmds:
       - sudo -v

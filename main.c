@@ -4,11 +4,9 @@
 
 #include "./do.h"
 
-#include <standardloop/logger.h>
-
-const char *message = "User: do [flags...] [task...]\n"
-                      "Runs the specified task.\n"
-                      "";
+// const char *message = "User: do [flags...] [task...]\n"
+//                       "Runs the specified task.\n"
+//                       "";
 
 static char *addDefaultNamespaceToTask(char *);
 
@@ -43,6 +41,8 @@ static char *addDefaultNamespaceToTask(char *task_name)
 
 int main(int argc, char **argv)
 {
+    InitLogger(StringToLogLevel("ERROR"), STANDARD_FMT, true, true, true, true);
+
     int opt;
     char *do_file_name = NULL;
     char *task_name = NULL;
@@ -87,8 +87,6 @@ int main(int argc, char **argv)
     {
         Log(FATAL, "buffer from reading file %s is NULL", do_file_name);
     }
-
-    InitLogger(StringToLogLevel("ERROR"), JSON_FMT, true, false, true, true);
 
     // DoLexerDebugTest(buffer, true);
     DoLexer *lexer = DoLexerInit(buffer);

@@ -2,6 +2,7 @@
 #define STANDARDLOOP_DO_H
 
 #include <standardloop/util.h>
+#include <standardloop/logger.h>
 
 extern char *ReadFile(char *);
 

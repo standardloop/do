@@ -6,8 +6,6 @@
 
 #include "./do.h"
 
-#include <standardloop/logger.h>
-
 extern Do *InitDo()
 {
     Do *do_var = malloc(sizeof(Do));
@@ -297,25 +295,19 @@ static char *checkAndReplaceOneTaskRefernce(Do *do_var, char *possible_other_tas
             DoTask *check_task = check_ns->tasks->list[k];
             if (strcmp(possible_other_task, check_task->name) == 0)
             {
-                // need to remove the task name and
-                // add the cmds of the task that was calld
-                // this needs to be done recursivily so that
-                // subsequently called tasks also fill in theres.
 
                 // TODO
                 // we need to use if the check_task has a status check not
-                // if (check_task->check_cmds != NULL)
-                // {
-                //     // printf("we need to do something here\n");
-                //     int status_check = buildAndRunCmds(do_var, check_ns->name, check_task->check_cmds);
-                //     // we need to run the check
-                //     // but the check can contain other tasks
-                //     // so we need to recursively call this function
-                //     // if the check != 0, then we need to add the task commands
-                //     // if the check == 0, then nothing needs to be added
-                //     add_task = status_check != 0;
-                // }
-                // called_task_cmds_copy = checkAndReplaceTaskReferences(do_var, check_task->cmds);
+                if (check_task->check_cmds != NULL)
+                {
+                    printf("we need to do something here\n");
+                    // int status_check = buildAndRunCmds(do_var, check_ns->name, check_task->check_cmds);
+                    // we need to run the check
+                    // but the check can contain other tasks
+                    // so we need to recursively call this function
+                    // if the check != 0, then we need to add the task commands
+                    // if the check == 0, then nothing needs to be added
+                }
                 return_value = checkAndReplaceTaskReferences(do_var, QuickAllocatedString(check_task->cmds));
                 break;
             }
@@ -350,8 +342,11 @@ static char *checkAndReplaceTaskReferences(Do *do_var, char *task_cmds)
         char *line_copy = QuickAllocatedString(split_cmds_by_newline->strings[i]);
 
         StringArr *split_each_line_by_space = EveryoneExplodeNow(split_cmds_by_newline->strings[i], SPACE_CHAR);
-        // printf("JOSH %s\n", split_cmds_by_newline->strings[i]);
-        // TODO -> check NULL
+        if (split_each_line_by_space == NULL)
+        {
+            Log(FATAL, "couldn't split_cmds_by_newline");
+            return NULL;
+        }
         char *possible_other_task = split_each_line_by_space->strings[0]; // do I want to support space separated?
         char *replaced_task_or_null = checkAndReplaceOneTaskRefernce(do_var, possible_other_task);
         // run through all namespaces to check if task exists
