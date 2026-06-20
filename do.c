@@ -174,6 +174,8 @@ static DoTask *findTargetTask(DoNamespace *target_namespace, char *task_string)
 static int runCmds(char *);
 
 #define CHILD_PID 0
+// TODO
+// we may want a flag to suppress stdout here
 static int runCmds(char *cmds)
 {
     if (cmds == NULL)
@@ -323,6 +325,15 @@ static char *checkAndReplaceTaskReferences(Do *do_var, char *task_cmds)
 
                     // TODO
                     // we need to use if the check_task has a status check not
+                    if (check_task->check_cmds != NULL)
+                    {
+                        printf("we need to do something here\n");
+                        // we need to run the status
+                        // but the check can contain other tasks
+                        // so we need to recursively call this function
+                        // if the check != 0, then we need to add the task commands
+                        // if the check == 0, then nothing needs to be added
+                    }
 
                     called_task_cmds_copy = QuickAllocatedString(check_task->cmds);
 
@@ -348,6 +359,22 @@ static char *checkAndReplaceTaskReferences(Do *do_var, char *task_cmds)
     }
     FreeStringArr(split_cmds_by_newline);
     return return_value;
+}
+
+static int buildAndRunCmds(Do *do_var, char *namespace_vars, char *task_cmds);
+static int buildAndRunCmds(Do *do_var, char *namespace_vars, char *task_cmds)
+{
+    Log(TRACE, "entering buildAndRunCmds");
+    if (do_var == NULL)
+    {
+        Log(FATAL, "do_var is null");
+        return 1;
+    }
+    char *full_task_check_cmds = checkAndReplaceTaskReferences(do_var, task_cmds);
+    char *full_task_with_vars_check_cmds = addNamespaceVarsToCmds(namespace_vars, full_task_check_cmds);
+    int task_status_return_code = runCmds(full_task_with_vars_check_cmds);
+    free(full_task_with_vars_check_cmds);
+    return task_status_return_code;
 }
 
 extern int RunDoTask(Do *do_var, char *namespace_colon_task)
@@ -380,24 +407,14 @@ extern int RunDoTask(Do *do_var, char *namespace_colon_task)
     bool run_task_cmds = true;
     if (target_task->check_cmds != NULL)
     {
-        char *full_task_check_cmds = checkAndReplaceTaskReferences(do_var, target_task->check_cmds);
-        char *full_task_with_vars_check_cmds = addNamespaceVarsToCmds(target_namespace->vars, full_task_check_cmds);
-        int task_status_return_code = runCmds(full_task_with_vars_check_cmds);
+        int task_status_return_code = buildAndRunCmds(do_var, target_namespace->vars, target_task->check_cmds);
         run_task_cmds = task_status_return_code != 0;
-        free(full_task_with_vars_check_cmds);
-        // printf("status: %d\n", task_status_return_code);
-        // exit(10);
     }
 
     int task_return_code = 0;
     if (run_task_cmds)
     {
-        // if a task's cmds runs another task, we need to add concate those
-        char *full_task_cmds = checkAndReplaceTaskReferences(do_var, target_task->cmds);
-        char *full_task_with_vars_cmds = addNamespaceVarsToCmds(target_namespace->vars, full_task_cmds);
-        // printf("running %s...\n", full_task_with_vars_cmds);
-        task_return_code = runCmds(full_task_with_vars_cmds);
-        free(full_task_with_vars_cmds);
+        task_return_code = buildAndRunCmds(do_var, target_namespace->vars, target_task->cmds);
     }
     else
     {
