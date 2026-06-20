@@ -280,6 +280,50 @@ static char *addNamespaceVarsToCmds(char *ns_vars, char *task_cmds)
 }
 
 static char *checkAndReplaceTaskReferences(Do *, char *);
+static char *checkAndReplaceOneTaskRefernce(Do *, char *);
+
+static char *checkAndReplaceOneTaskRefernce(Do *do_var, char *possible_other_task)
+{
+    if (do_var == NULL)
+    {
+        return NULL;
+    }
+    char *return_value = NULL;
+    for (size_t j = 0; j < do_var->namespaces->size; j++)
+    {
+        DoNamespace *check_ns = do_var->namespaces->list[j];
+        for (size_t k = 0; k < check_ns->tasks->size; k++)
+        {
+            DoTask *check_task = check_ns->tasks->list[k];
+            if (strcmp(possible_other_task, check_task->name) == 0)
+            {
+                // need to remove the task name and
+                // add the cmds of the task that was calld
+                // this needs to be done recursivily so that
+                // subsequently called tasks also fill in theres.
+
+                // TODO
+                // we need to use if the check_task has a status check not
+                // if (check_task->check_cmds != NULL)
+                // {
+                //     // printf("we need to do something here\n");
+                //     int status_check = buildAndRunCmds(do_var, check_ns->name, check_task->check_cmds);
+                //     // we need to run the check
+                //     // but the check can contain other tasks
+                //     // so we need to recursively call this function
+                //     // if the check != 0, then we need to add the task commands
+                //     // if the check == 0, then nothing needs to be added
+                //     add_task = status_check != 0;
+                // }
+                // called_task_cmds_copy = checkAndReplaceTaskReferences(do_var, check_task->cmds);
+                return_value = checkAndReplaceTaskReferences(do_var, QuickAllocatedString(check_task->cmds));
+                break;
+            }
+        }
+    }
+    return return_value;
+}
+
 // ok
 // we need to see if the task cmds contains another task name
 // TODO we need to worry about checks as well
@@ -293,63 +337,27 @@ static char *checkAndReplaceTaskReferences(Do *do_var, char *task_cmds)
         Log(FATAL, "checkAndReplaceTaskReferences, invalid args");
         return NULL;
     }
+    char *return_value = QuickAllocatedString("\0");
     StringArr *split_cmds_by_newline = EveryoneExplodeNow(task_cmds, NEWLINE_CHAR);
     if (split_cmds_by_newline == NULL)
     {
         return NULL;
     }
 
-    char *return_value = QuickAllocatedString("\0");
-    char *called_task_cmds_copy = NULL;
     // run through all lines of the cmd
     for (int i = 0; i < split_cmds_by_newline->num_strings; i++)
     {
         char *line_copy = QuickAllocatedString(split_cmds_by_newline->strings[i]);
+
         StringArr *split_each_line_by_space = EveryoneExplodeNow(split_cmds_by_newline->strings[i], SPACE_CHAR);
         // printf("JOSH %s\n", split_cmds_by_newline->strings[i]);
         // TODO -> check NULL
-        char *possible_other_task = split_each_line_by_space->strings[0];
+        char *possible_other_task = split_each_line_by_space->strings[0]; // do I want to support space separated?
+        char *replaced_task_or_null = checkAndReplaceOneTaskRefernce(do_var, possible_other_task);
         // run through all namespaces to check if task exists
-        for (size_t j = 0; j < do_var->namespaces->size; j++)
+        if (replaced_task_or_null != NULL)
         {
-            DoNamespace *check_ns = do_var->namespaces->list[j];
-            for (size_t k = 0; k < check_ns->tasks->size; k++)
-            {
-                DoTask *check_task = check_ns->tasks->list[k];
-                if (strcmp(possible_other_task, check_task->name) == 0)
-                {
-                    // need to remove the task name and
-                    // add the cmds of the task that was calld
-                    // this needs to be done recursivily so that
-                    // subsequently called tasks also fill in theres.
-
-                    // TODO
-                    // we need to use if the check_task has a status check not
-                    if (check_task->check_cmds != NULL)
-                    {
-                        printf("we need to do something here\n");
-                        // we need to run the status
-                        // but the check can contain other tasks
-                        // so we need to recursively call this function
-                        // if the check != 0, then we need to add the task commands
-                        // if the check == 0, then nothing needs to be added
-                    }
-
-                    called_task_cmds_copy = QuickAllocatedString(check_task->cmds);
-
-                    // called_task_cmds_copy = checkAndReplaceTaskReferences(do_var, called_task_cmds_copy);
-                    break;
-                }
-                called_task_cmds_copy = NULL;
-            }
-            if (called_task_cmds_copy != NULL)
-            {
-                break;
-            }
-        }
-        if (called_task_cmds_copy != NULL)
-        {
-            return_value = concateStringsWithNewlineInMiddle(return_value, called_task_cmds_copy);
+            return_value = concateStringsWithNewlineInMiddle(return_value, replaced_task_or_null);
         }
         else
         {

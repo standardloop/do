@@ -23,4 +23,23 @@ namespace main {
             echo "what will happen?"
         }
     }
+    task base {
+        cmds {
+            echo "base"
+        }
+    }
+    task basetwo {
+        cmds {
+            base
+            base
+        }
+    }
+    task runother {
+        cmds {
+            base
+            basetwo
+            base
+            basetwo
+        }
+    }
 }
