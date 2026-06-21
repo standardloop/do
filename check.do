@@ -9,7 +9,7 @@ namespace main {
     }
     task norun {
         check {
-            exit 0;
+            echo "norun check"
         }
         cmds {
             echo "this task will not run"
@@ -36,10 +36,10 @@ namespace main {
     }
     task runother {
         cmds {
-            baseone
-            basetwo
-            basetwo
-            basetwo
+            norun
+            norun
+            norun
+            norun
         }
     }
 }
