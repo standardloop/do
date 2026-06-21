@@ -6,6 +6,15 @@
 
 #include "./do.h"
 
+static char *checkAndReplaceTaskReferences(Do *, char *);
+static char *checkAndReplaceOneTaskReference(Do *, char *);
+static StringArr *separateNamespaceAndTask(char *);
+static DoNamespace *findTargetNamespace(Do *, char *);
+static DoTask *findTargetTask(DoNamespace *, char *);
+static char *addNamespaceVarsToCmds(char *, char *);
+static char *concateStringsWithNewlineInMiddle(char *, char *);
+static int buildAndRunCmds(Do *, char *, char *);
+
 extern Do *InitDo()
 {
     Do *do_var = malloc(sizeof(Do));
@@ -63,7 +72,6 @@ extern void PrintDo(Do *do_var)
     }
 }
 
-static StringArr *separateNamespaceAndTask(char *);
 static StringArr *separateNamespaceAndTask(char *namespace_colon_task)
 {
     StringArr *namespace_colon_task_str_arr = EveryoneExplodeNow(namespace_colon_task, COLON_CHAR);
@@ -80,7 +88,6 @@ static StringArr *separateNamespaceAndTask(char *namespace_colon_task)
     return namespace_colon_task_str_arr;
 }
 
-static DoNamespace *findTargetNamespace(Do *, char *);
 static DoNamespace *findTargetNamespace(Do *do_var, char *namespace_string)
 {
     if (do_var == NULL || namespace_string == NULL)
@@ -114,7 +121,6 @@ static DoNamespace *findTargetNamespace(Do *do_var, char *namespace_string)
     return NULL;
 }
 
-static DoTask *findTargetTask(DoNamespace *, char *);
 static DoTask *findTargetTask(DoNamespace *target_namespace, char *task_string)
 {
     if (target_namespace == NULL || task_string == NULL)
@@ -225,9 +231,7 @@ static int runCmds(char *cmds)
     }
     return 0;
 }
-static char *addNamespaceVarsToCmds(char *, char *);
 
-static char *concateStringsWithNewlineInMiddle(char *, char *);
 static char *concateStringsWithNewlineInMiddle(char *first_str, char *second_str)
 {
     size_t first_str_len = strlen(first_str);
@@ -277,10 +281,7 @@ static char *addNamespaceVarsToCmds(char *ns_vars, char *task_cmds)
     return concate_str;
 }
 
-static char *checkAndReplaceTaskReferences(Do *, char *);
-static char *checkAndReplaceOneTaskRefernce(Do *, char *);
-
-static char *checkAndReplaceOneTaskRefernce(Do *do_var, char *possible_other_task)
+static char *checkAndReplaceOneTaskReference(Do *do_var, char *possible_other_task)
 {
     if (do_var == NULL)
     {
@@ -298,17 +299,23 @@ static char *checkAndReplaceOneTaskRefernce(Do *do_var, char *possible_other_tas
 
                 // TODO
                 // we need to use if the check_task has a status check not
+                bool add_check_tasks_commands = true;
                 if (check_task->check_cmds != NULL)
                 {
-                    printf("we need to do something here\n");
-                    // int status_check = buildAndRunCmds(do_var, check_ns->name, check_task->check_cmds);
-                    // we need to run the check
-                    // but the check can contain other tasks
-                    // so we need to recursively call this function
-                    // if the check != 0, then we need to add the task commands
-                    // if the check == 0, then nothing needs to be added
+                    // printf("we need to do something here\n");
+                    int status_check = buildAndRunCmds(do_var, check_ns->vars, check_task->check_cmds);
+                    add_check_tasks_commands = status_check != 0;
                 }
-                return_value = checkAndReplaceTaskReferences(do_var, QuickAllocatedString(check_task->cmds));
+
+                if (add_check_tasks_commands)
+                {
+                    return_value = checkAndReplaceTaskReferences(do_var, QuickAllocatedString(check_task->cmds));
+                }
+                else
+                {
+                    return_value = QuickAllocatedString("\n");
+                }
+
                 break;
             }
         }
@@ -316,9 +323,11 @@ static char *checkAndReplaceOneTaskRefernce(Do *do_var, char *possible_other_tas
     return return_value;
 }
 
-// ok
-// we need to see if the task cmds contains another task name
-// TODO we need to worry about checks as well
+// We need to see if the task cmds contains another task name
+// If it does, we need to replace it with the contents of that task
+// But if the task that it wants to call has a check, we need to run the check
+// If the check's status is 0, we don't need to replace the contents
+// If the check's status is !0, then we replace the contents
 static char *checkAndReplaceTaskReferences(Do *do_var, char *task_cmds)
 {
     // TODO
@@ -348,8 +357,7 @@ static char *checkAndReplaceTaskReferences(Do *do_var, char *task_cmds)
             return NULL;
         }
         char *possible_other_task = split_each_line_by_space->strings[0]; // do I want to support space separated?
-        char *replaced_task_or_null = checkAndReplaceOneTaskRefernce(do_var, possible_other_task);
-        // run through all namespaces to check if task exists
+        char *replaced_task_or_null = checkAndReplaceOneTaskReference(do_var, possible_other_task);
         if (replaced_task_or_null != NULL)
         {
             return_value = concateStringsWithNewlineInMiddle(return_value, replaced_task_or_null);
@@ -364,7 +372,6 @@ static char *checkAndReplaceTaskReferences(Do *do_var, char *task_cmds)
     return return_value;
 }
 
-static int buildAndRunCmds(Do *do_var, char *namespace_vars, char *task_cmds);
 static int buildAndRunCmds(Do *do_var, char *namespace_vars, char *task_cmds)
 {
     Log(TRACE, "entering buildAndRunCmds");
@@ -375,6 +382,10 @@ static int buildAndRunCmds(Do *do_var, char *namespace_vars, char *task_cmds)
     }
     char *full_task_check_cmds = checkAndReplaceTaskReferences(do_var, task_cmds);
     char *full_task_with_vars_check_cmds = addNamespaceVarsToCmds(namespace_vars, full_task_check_cmds);
+
+    // printf("JOSH\n");
+    // printf("%s\n", full_task_with_vars_check_cmds);
+    // printf("DONE\n");
     int task_status_return_code = runCmds(full_task_with_vars_check_cmds);
     free(full_task_with_vars_check_cmds);
     return task_status_return_code;
@@ -402,8 +413,8 @@ extern int RunDoTask(Do *do_var, char *namespace_colon_task)
     DoTask *target_task = findTargetTask(target_namespace, task_string);
     if (target_task == NULL)
     {
+        Log(FATAL, "task \"%s\" could not be found", task_string);
         FreeStringArr(namespace_colon_task_str_arr);
-        Log(FATAL, "target_task == NULL");
         return 1;
     }
     // if there is a status, we need to run the status first to see if the task cmds need to be ran
@@ -421,7 +432,7 @@ extern int RunDoTask(Do *do_var, char *namespace_colon_task)
     }
     else
     {
-        printf("task %s is up to date, nothing to run!\n", target_task->name);
+        Log(DEBUG, "task %s is up to date, nothing to run!", target_task->name);
     }
 
     return task_return_code;

@@ -41,7 +41,7 @@ static char *addDefaultNamespaceToTask(char *task_name)
 
 int main(int argc, char **argv)
 {
-    InitLogger(StringToLogLevel("ERROR"), STANDARD_FMT, true, true, true, true);
+    InitLogger(StringToLogLevel("ERROR"), STANDARD_FMT, false, true, true, true);
 
     int opt;
     char *do_file_name = NULL;
