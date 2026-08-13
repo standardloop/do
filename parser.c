@@ -5,7 +5,6 @@
 
 #include "./do.h"
 
-
 static void nextDoToken(DoParser *);
 
 static DoTask *parseTask(DoParser *);
