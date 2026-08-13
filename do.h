@@ -128,6 +128,7 @@ extern void PrintDoParserErrorLine(DoParser *);
 
 typedef struct
 {
+    char *vars;
     char *name;
     char *check_cmds;
     char *cmds;

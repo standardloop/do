@@ -5,7 +5,6 @@
 
 #include "./do.h"
 
-
 static void advanceChar(DoLexer *);
 static void backtrackChar(DoLexer *);
 static void skipWhitespace(DoLexer *);

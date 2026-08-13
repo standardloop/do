@@ -7,10 +7,15 @@ namespace main {
             echo "$x"
         }
     }
+    task will-it-ovewrite {
+        cmds {
+            echo $x
+        }
+    }
     task overwritten {
         cmds {
             x="overwritten"
-            echo "$x"
+            will-it-ovewrite
         }
     }
 }

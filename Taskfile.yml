@@ -4,7 +4,7 @@ version: '3'
 vars:
   CC: clang
   CC_FLAGS: "-g -Werror -Wextra -Wall -Wfree-nonheap-object -std=c17"
-  EXECUTABLE_NAME: do
+  EXECUTABLE_NAME: do-task
   DYN_LIBS_USED_PATH: "-L/usr/local/lib/standardloop"
   DYN_LIBS_USED: "-pthread -lstandardloop-logger -lstandardloop-util"
   SOURCE_FILES:
@@ -82,11 +82,6 @@ tasks:
     generates:
       - "{{.EXECUTABLE_NAME}}"
   
-  run:
-    deps:
-      - build
-    cmds:
-      - ./{{.EXECUTABLE_NAME}}
 
   sanitize:
     deps:
