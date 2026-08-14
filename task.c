@@ -16,6 +16,7 @@ extern DoTask *InitDoTask(char *name)
     task->name = name;
     task->cmds = NULL;
     task->check_cmds = NULL;
+    task->vars = NULL;
     return task;
 }
 
@@ -32,6 +33,25 @@ extern void FreeDoTask(DoTask *task)
             // FIXME
             free(task->cmds);
         }
+        if (task->check_cmds != NULL)
+        {
+            free(task->check_cmds);
+        }
+        if (task->vars != NULL)
+        {
+            free(task->vars);
+        }
         free(task);
+    }
+}
+
+extern void PrintDoTask(DoTask *task)
+{
+    if (task != NULL)
+    {
+        if (task->name != NULL)
+        {
+            printf("task->name = %s\n", task->name);
+        }
     }
 }

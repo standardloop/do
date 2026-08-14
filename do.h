@@ -128,14 +128,15 @@ extern void PrintDoParserErrorLine(DoParser *);
 
 typedef struct
 {
-    char *vars;
     char *name;
+    char *vars;
     char *check_cmds;
     char *cmds;
 } DoTask;
 
 extern DoTask *InitDoTask(char *);
 extern void FreeDoTask(DoTask *);
+extern void PrintDoTask(DoTask *);
 
 typedef struct
 {

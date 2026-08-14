@@ -58,7 +58,7 @@ extern char *ReadFile(char *filename)
 
 static void advanceChar(DoLexer *lexer)
 {
-    Log(TRACE, "entering advanceChar");
+    // Log(TRACE, "entering advanceChar");
     if (lexer->read_position >= lexer->input_len)
     {
         lexer->current_char = NULL_CHAR;

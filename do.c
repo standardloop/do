@@ -11,9 +11,9 @@ static char *checkAndReplaceOneTaskReference(Do *, char *);
 static StringArr *separateNamespaceAndTask(char *);
 static DoNamespace *findTargetNamespace(Do *, char *);
 static DoTask *findTargetTask(DoNamespace *, char *);
-static char *addNamespaceVarsToCmds(char *, char *);
+static char *addVarsToCmds(char *, char *);
 static char *concateStringsWithNewlineInMiddle(char *, char *);
-static int buildAndRunCmds(Do *, char *, char *);
+static int buildAndRunCmds(Do *, char *, char *, char *);
 
 extern Do *InitDo()
 {
@@ -264,19 +264,19 @@ static char *concateStringsWithNewlineInMiddle(char *first_str, char *second_str
     return concate_str;
 }
 
-static char *addNamespaceVarsToCmds(char *ns_vars, char *task_cmds)
+static char *addVarsToCmds(char *vars, char *task_cmds)
 {
-    Log(DEBUG, "entering addNamespaceVarsToCmds");
-    if (ns_vars == NULL)
+    Log(DEBUG, "entering addVarsToCmds");
+    if (vars == NULL)
     {
-        Log(DEBUG, "ns_vars is NULL");
+        Log(DEBUG, "vars is NULL");
         return QuickAllocatedString(task_cmds); // duplicate
     }
     if (task_cmds == NULL)
     {
         return NULL;
     }
-    char *concate_str = concateStringsWithNewlineInMiddle(ns_vars, task_cmds);
+    char *concate_str = concateStringsWithNewlineInMiddle(vars, task_cmds);
 
     return concate_str;
 }
@@ -303,7 +303,7 @@ static char *checkAndReplaceOneTaskReference(Do *do_var, char *possible_other_ta
                 if (check_task->check_cmds != NULL)
                 {
                     // printf("we need to do something here\n");
-                    int status_check = buildAndRunCmds(do_var, check_ns->vars, check_task->check_cmds);
+                    int status_check = buildAndRunCmds(do_var, check_ns->vars, check_task->vars, check_task->check_cmds);
                     add_check_tasks_commands = status_check != 0;
                 }
 
@@ -372,22 +372,27 @@ static char *checkAndReplaceTaskReferences(Do *do_var, char *task_cmds)
     return return_value;
 }
 
-static int buildAndRunCmds(Do *do_var, char *namespace_vars, char *task_cmds)
+static int buildAndRunCmds(Do *do_var, char *namespace_vars, char *task_vars, char *task_cmds)
 {
     Log(TRACE, "entering buildAndRunCmds");
+    // Log(ERROR, "%s", task_vars);
+    // Log(FATAL, "%s", namespace_vars);
     if (do_var == NULL)
     {
         Log(FATAL, "do_var is null");
         return 1;
     }
     char *full_task_check_cmds = checkAndReplaceTaskReferences(do_var, task_cmds);
-    char *full_task_with_vars_check_cmds = addNamespaceVarsToCmds(namespace_vars, full_task_check_cmds);
+    char *full_task_with_vars_check_cmds = addVarsToCmds(task_vars, full_task_check_cmds);
+    char *full_task = addVarsToCmds(namespace_vars, full_task_with_vars_check_cmds);
+
+    // Log(FATAL, "%s", full_task);
 
     // printf("JOSH\n");
     // printf("%s\n", full_task_with_vars_check_cmds);
     // printf("DONE\n");
-    int task_status_return_code = runCmds(full_task_with_vars_check_cmds);
-    free(full_task_with_vars_check_cmds);
+    int task_status_return_code = runCmds(full_task);
+    free(full_task);
     return task_status_return_code;
 }
 
@@ -421,14 +426,14 @@ extern int RunDoTask(Do *do_var, char *namespace_colon_task)
     bool run_task_cmds = true;
     if (target_task->check_cmds != NULL)
     {
-        int task_status_return_code = buildAndRunCmds(do_var, target_namespace->vars, target_task->check_cmds);
+        int task_status_return_code = buildAndRunCmds(do_var, target_namespace->vars, target_task->vars, target_task->check_cmds);
         run_task_cmds = task_status_return_code != 0;
     }
 
     int task_return_code = 0;
     if (run_task_cmds)
     {
-        task_return_code = buildAndRunCmds(do_var, target_namespace->vars, target_task->cmds);
+        task_return_code = buildAndRunCmds(do_var, target_namespace->vars, target_task->vars, target_task->cmds);
     }
     else
     {

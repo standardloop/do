@@ -40,12 +40,12 @@ static void nextDoToken(DoParser *parser)
     parser->peek_token = DoLex(parser->lexer);
 }
 
-char *parseNSVars(DoParser *);
-char *parseNSVars(DoParser *parser)
+char *parseVars(DoParser *);
+char *parseVars(DoParser *parser)
 {
     if (parser == NULL)
     {
-        Log(FATAL, "parseNSVars(DoParser *parser), parser is NULL");
+        Log(FATAL, "parseVars(DoParser *parser), parser is NULL");
         return NULL;
     }
     if (parser->current_token->type != DoTokenVars || parser->peek_token->type != DoTokenOpenCurlyBrace)
@@ -116,7 +116,7 @@ static DoNamespace *parseDoNamespace(DoParser *parser)
         }
         else if (parser->current_token->type == DoTokenVars)
         {
-            char *ns_vars = parseNSVars(parser);
+            char *ns_vars = parseVars(parser);
             if (ns_vars == NULL)
             {
                 Log(FATAL, "ns_vars returned NULL");
@@ -208,6 +208,18 @@ static char *cleanSpacesFromTaskCmds(char *task_cmds)
     return task_cmds;
 }
 
+static bool isExpectingOpenBraceNext(enum DoTokenType type)
+{
+    return type == DoTokenCmds || type == DoTokenVars || type == DoTokenCheck;
+}
+
+// static void checkForDuplicateTaskFieldThenSet(DoTask *, enum DoTokenType);
+// static void checkForDuplicateTaskFieldThenSet(DoTask *task, enum DoTokenType type)
+// {
+//     if(task == NULL) {}
+// }
+
+// this function is so hard coded it is insane
 static DoTask *parseTask(DoParser *parser)
 {
     if (parser == NULL)
@@ -235,138 +247,101 @@ static DoTask *parseTask(DoParser *parser)
         Log(FATAL, "task is NULL");
         return NULL;
     }
-
-    nextDoToken(parser);
-    if (parser->current_token->type != DoTokenOpenCurlyBrace || (parser->peek_token->type != DoTokenCmds && parser->peek_token->type != DoTokenCheck))
+    Log(DEBUG, "%s", task->name);
+    while (ALWAYS)
     {
-        FreeDoTask(task);
-        Log(FATAL, "(parser->current_token->type != DoTokenOpenCurlyBrace || (parser->peek_token->type != DoTokenCmds && parser->peek_token->type != DoTokenCheck))");
-        return NULL;
-    }
-    nextDoToken(parser);
-    if ((parser->current_token->type != DoTokenCmds && parser->current_token->type != DoTokenCheck) || parser->peek_token->type != DoTokenOpenCurlyBrace)
-    {
-        FreeDoTask(task);
-        Log(FATAL, "(error parsing task)");
-        return NULL;
-    }
-    bool is_check_cmds = parser->current_token->type == DoTokenCheck;
-    bool is_cmds = parser->current_token->type == DoTokenCmds;
-
-    nextDoToken(parser);
-    if (parser->current_token->type != DoTokenOpenCurlyBrace)
-    {
-        FreeDoTask(task);
-        Log(FATAL, "(parser->current_token->type != DoTokenOpenCurlyBrace)");
-        return NULL;
-    }
-    nextDoToken(parser);
-    if (parser->current_token->type != DoTokenString || parser->peek_token->type != DoTokenCloseCurlyBrace)
-    {
-        FreeDoTask(task);
-        Log(FATAL, "line: %d (parser->current_token->type != DoTokenString || parser->peek_token->type != DoTokenCloseCurlyBrace)", parser->current_token->line);
-        return NULL;
-    }
-
-    char *task_cmds = QuickAllocatedString(parser->current_token->literal);
-    char *task_cmds_with_no_extra_white_space = cleanSpacesFromTaskCmds(task_cmds); // Not sure about this lol
-    if (is_check_cmds)
-    {
-        if (task->check_cmds != NULL)
+        if (parser->current_token->type == DoTokenEOF || parser->current_token->type == DoTokenIllegal)
         {
-            FreeDoTask(task);
-            Log(FATAL, "Line %d: duplicate task check, only one is allowed", parser->current_token->line);
-            return NULL;
+            Log(FATAL, "invalid token in dotask");
+            break;
         }
-        task->check_cmds = task_cmds_with_no_extra_white_space;
-    }
-    else if (is_cmds)
-    {
-        if (task->cmds != NULL)
+        if (isExpectingOpenBraceNext(parser->current_token->type))
         {
-            FreeDoTask(task);
-            Log(FATAL, "Line %d: duplicate task cmds, only one is allowed", parser->current_token->line);
-            return NULL;
-        }
-        task->cmds = task_cmds_with_no_extra_white_space;
-    }
+            if (parser->peek_token->type != DoTokenOpenCurlyBrace)
+            {
+                Log(FATAL, "expected open brace { after vars, cmds, and status");
+                break;
+            }
 
-    // Log(INFO, "%s", task->cmds);
-    nextDoToken(parser);
-    if (parser->current_token->type != DoTokenCloseCurlyBrace || (parser->peek_token->type != DoTokenCmds && parser->peek_token->type != DoTokenCheck && parser->peek_token->type != DoTokenCloseCurlyBrace)) // || parser->obj_nested != FIXME)
-    {
-        FreeDoTask(task);
-        Log(FATAL, "(error parsing task)");
-        return NULL;
-    }
-    nextDoToken(parser);
-    if (parser->current_token->type == DoTokenCloseCurlyBrace)
-    {
-        if (task->cmds == NULL)
-        {
-            FreeDoTask(task);
-            Log(FATAL, "a cmds section is required for a task");
-            return NULL;
-        }
-        else
-        {
-            return task;
-        }
-    }
-    else if (parser->current_token->type == DoTokenCmds || parser->current_token->type == DoTokenCheck)
-    {
-        bool is_check_cmds = parser->current_token->type == DoTokenCheck;
-        bool is_cmds = parser->current_token->type == DoTokenCmds;
-
-        nextDoToken(parser);
-        if (parser->current_token->type != DoTokenOpenCurlyBrace)
-        {
-            FreeDoTask(task);
-            Log(FATAL, "(parser->current_token->type != DoTokenOpenCurlyBrace)");
-            return NULL;
+            else
+            {
+                // should be cmds, check, or vars
+                enum DoTokenType type_hold = parser->current_token->type;
+                nextDoToken(parser);
+                if (parser->current_token->type != DoTokenOpenCurlyBrace || parser->peek_token->type != DoTokenString)
+                {
+                    Log(FATAL, "expected string after the { (open curly brace) that comes after vars, cmds, and status");
+                    break;
+                }
+                else
+                {
+                    nextDoToken(parser);
+                    if (parser->current_token->type != DoTokenString || parser->peek_token->type != DoTokenCloseCurlyBrace)
+                    {
+                        Log(FATAL, "expected close curly brace after string");
+                        break;
+                    }
+                    else
+                    {
+                        char *task_cmds_check_var_str = QuickAllocatedString(parser->current_token->literal);
+                        if (type_hold == DoTokenCmds)
+                        {
+                            if (task->cmds != NULL)
+                            {
+                                FreeDoTask(task);
+                                Log(FATAL, "Line %d: duplicate task cmds, only one is allowed", parser->current_token->line);
+                                return NULL;
+                            }
+                            char *task_cmds_with_no_extra_white_space = cleanSpacesFromTaskCmds(task_cmds_check_var_str);
+                            task->cmds = task_cmds_with_no_extra_white_space;
+                        }
+                        else if (type_hold == DoTokenCheck)
+                        {
+                            if (task->check_cmds != NULL)
+                            {
+                                FreeDoTask(task);
+                                Log(FATAL, "Line %d: duplicate task check cmds, only one is allowed", parser->current_token->line);
+                                return NULL;
+                            }
+                            char *task_cmds_with_no_extra_white_space = cleanSpacesFromTaskCmds(task_cmds_check_var_str);
+                            task->check_cmds = task_cmds_with_no_extra_white_space;
+                        }
+                        else if (type_hold == DoTokenVars)
+                        {
+                            Log(DEBUG, "hi");
+                            if (task->vars != NULL)
+                            {
+                                FreeDoTask(task);
+                                Log(FATAL, "Line %d: duplicate task vars, only one is allowed", parser->current_token->line);
+                                return NULL;
+                            }
+                            task->vars = task_cmds_check_var_str;
+                        }
+                        else
+                        {
+                            Log(FATAL, "invalid token type inside task");
+                            break;
+                        }
+                        nextDoToken(parser);
+                        if (parser->current_token->type == DoTokenCloseCurlyBrace && parser->peek_token->type == DoTokenCloseCurlyBrace)
+                        {
+                            nextDoToken(parser);
+                            // FIXME, need to see if task has enough fields, at minimum needs cmds
+                            break;
+                        }
+                    }
+                }
+            }
         }
         nextDoToken(parser);
-        if (parser->current_token->type != DoTokenString || parser->peek_token->type != DoTokenCloseCurlyBrace)
-        {
-            FreeDoTask(task);
-            Log(FATAL, "line: %d (parser->current_token->type != DoTokenString || parser->peek_token->type != DoTokenCloseCurlyBrace)", parser->current_token->line);
-            return NULL;
-        }
+    }
 
-        char *task_cmds = QuickAllocatedString(parser->current_token->literal);
-        char *task_cmds_with_no_extra_white_space = cleanSpacesFromTaskCmds(task_cmds); // Not sure about this lol
-        if (is_check_cmds)
-        {
-            if (task->check_cmds != NULL)
-            {
-                FreeDoTask(task);
-                Log(FATAL, "Line %d: duplicate task check, only one is allowed", parser->current_token->line);
-                return NULL;
-            }
-            task->check_cmds = task_cmds_with_no_extra_white_space;
-        }
-        else if (is_cmds)
-        {
-            if (task->cmds != NULL)
-            {
-                FreeDoTask(task);
-                Log(FATAL, "Line %d: duplicate task cmds, only one is allowed", parser->current_token->line);
-                return NULL;
-            }
-            task->cmds = task_cmds_with_no_extra_white_space;
-        }
-    }
-    else
+    // FIXME, need to see if task has enough fields, at minimum needs cmds
+
+    if (task->cmds == NULL)
     {
+        Log(FATAL, "task %s needs to have a cmds section", task->name);
         FreeDoTask(task);
-        Log(FATAL, "error parsing task");
-        return NULL;
-    }
-    nextDoToken(parser);
-    if (parser->current_token->type != DoTokenCloseCurlyBrace) // || parser->obj_nested != FIXME)
-    {
-        FreeDoTask(task);
-        Log(FATAL, "(error parsing task)");
         return NULL;
     }
     return task;

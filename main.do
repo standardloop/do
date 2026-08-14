@@ -15,6 +15,10 @@ namespace main {
     }
 
     task download-dependency {
+        check {
+            otool -L /usr/local/lib/standardloop/libstandardloop-$DYLIB_NAME.dylib | head -n 2 | tail -n 1 | grep "current version $DYLIB_VERSION"
+            cat /usr/local/include/standardloop/$DYLIB_NAME.h | grep "STANDARDLOOP_${DYLIB_NAME^^} \"$DYLIB_VERSION\""
+        }
         cmds {
             mkdir -p dependencies/tmp-$DYLIB_NAME
             cd dependencies/tmp-$DYLIB_NAME
@@ -24,13 +28,6 @@ namespace main {
             sudo mkdir -p /usr/local/include/standardloop/
             sudo mv libstandardloop-$DYLIB_NAME.dylib /usr/local/lib/standardloop/
             sudo mv $DYLIB_NAME.h /usr/local/include/standardloop/ && rm libstandardloop-$DYLIB_NAME.zip
-        }
-    }
-
-    task check-dependency {
-        cmds {
-            otool -L /usr/local/lib/standardloop/libstandardloop-$DYLIB_NAME.dylib | head -n 2 | tail -n 1 | grep "current version $DYLIB_VERSION"
-            cat /usr/local/include/standardloop/$DYLIB_NAME.h | grep "STANDARDLOOP_$DYLIB_NAME | upper_H_VERSION \"$DYLIB_VERSION\""
         }
     }
 
@@ -47,9 +44,6 @@ namespace main {
             DYLIB_VERSION="0.0.8"
             DYLIB_NAME="util"
         }
-        status {
-            check-dependency
-        }
         cmds {
             download-dependency
         }
@@ -60,10 +54,6 @@ namespace main {
             REPO_NAME="c-util"
             DYLIB_VERSION="0.0.8"
             DYLIB_NAME="util"
-        }
-
-        status {
-            check-dependency
         }
 
         cmds {

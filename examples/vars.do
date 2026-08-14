@@ -2,20 +2,17 @@ namespace main {
     vars {
         x="hello"
     }
-    task take-from-global {
+    task overwritten {
+        vars {
+            x="overwritten"
+        }
         cmds {
             echo "$x"
         }
     }
-    task will-it-ovewrite {
+    task take-from-global {
         cmds {
-            echo $x
-        }
-    }
-    task overwritten {
-        cmds {
-            x="overwritten"
-            will-it-ovewrite
+            echo "$x"
         }
     }
 }
