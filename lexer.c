@@ -177,7 +177,7 @@ static char *parseLiteralOrKeyword(DoLexer *lexer)
                     }
                 }
             }
-            if (lexer->current_char == NULL_CHAR || lexer->current_char == CURLY_CLOSE_CHAR)
+            if (lexer->current_char == NULL_CHAR || (lexer->current_char == CURLY_CLOSE_CHAR && !lexer->in_quotes))
             {
                 break;
             }

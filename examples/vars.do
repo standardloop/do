@@ -1,10 +1,10 @@
 namespace main {
     vars {
-        x="hello"
+        x="global var"
     }
     task overwritten {
         vars {
-            x="overwritten"
+            x="task var overwritten"
         }
         cmds {
             echo "$x"
@@ -13,6 +13,12 @@ namespace main {
     task take-from-global {
         cmds {
             echo "$x"
+        }
+    }
+
+    task with-brace {
+        cmds {
+            echo "${x}"
         }
     }
 }

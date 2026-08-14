@@ -98,6 +98,9 @@ int main(int argc, char **argv)
         Log(FATAL, "couldn't parser do");
         return EXIT_FAILURE;
     }
+    // PrintDo(do_var);
+    // exit(1);
+
     task_name = addDefaultNamespaceToTask(task_name);
     RunDoTask(do_var, task_name);
     FreeDo(do_var);
