@@ -6,8 +6,8 @@
 
 #include "./do.h"
 
-static char *checkAndReplaceTaskReferences(Do *, char *);
-static char *checkAndReplaceOneTaskReference(Do *, char *);
+static char *checkAndReplaceTaskReferences(Do *, char *, char *);
+static char *checkAndReplaceOneTaskReference(Do *, char *, char *);
 static StringArr *separateNamespaceAndTask(char *);
 static DoNamespace *findTargetNamespace(Do *, char *);
 static DoTask *findTargetTask(DoNamespace *, char *);
@@ -281,7 +281,7 @@ static char *addVarsToCmds(char *vars, char *task_cmds)
     return concate_str;
 }
 
-static char *checkAndReplaceOneTaskReference(Do *do_var, char *possible_other_task)
+static char *checkAndReplaceOneTaskReference(Do *do_var, char *original_task_vars, char *possible_other_task)
 {
     if (do_var == NULL)
     {
@@ -303,13 +303,15 @@ static char *checkAndReplaceOneTaskReference(Do *do_var, char *possible_other_ta
                 if (check_task->check_cmds != NULL)
                 {
                     // printf("we need to do something here\n");
-                    int status_check = buildAndRunCmds(do_var, check_ns->vars, check_task->vars, check_task->check_cmds);
+                    char *add_variables_together = addVarsToCmds(original_task_vars, check_task->vars);
+                    int status_check = buildAndRunCmds(do_var, check_ns->vars, add_variables_together, check_task->check_cmds);
                     add_check_tasks_commands = status_check != 0;
                 }
 
                 if (add_check_tasks_commands)
                 {
-                    return_value = checkAndReplaceTaskReferences(do_var, QuickAllocatedString(check_task->cmds));
+                    char *add_variables_together = addVarsToCmds(original_task_vars, check_task->vars);
+                    return_value = checkAndReplaceTaskReferences(do_var, add_variables_together, QuickAllocatedString(check_task->cmds));
                 }
                 else
                 {
@@ -328,7 +330,9 @@ static char *checkAndReplaceOneTaskReference(Do *do_var, char *possible_other_ta
 // But if the task that it wants to call has a check, we need to run the check
 // If the check's status is 0, we don't need to replace the contents
 // If the check's status is !0, then we replace the contents
-static char *checkAndReplaceTaskReferences(Do *do_var, char *task_cmds)
+
+// we need to get the original task's variables to pass down
+static char *checkAndReplaceTaskReferences(Do *do_var, char *task_vars, char *task_cmds)
 {
     // TODO
     // pass taskname in too to make sure a task doesn't call itself
@@ -357,7 +361,7 @@ static char *checkAndReplaceTaskReferences(Do *do_var, char *task_cmds)
             return NULL;
         }
         char *possible_other_task = split_each_line_by_space->strings[0]; // do I want to support space separated?
-        char *replaced_task_or_null = checkAndReplaceOneTaskReference(do_var, possible_other_task);
+        char *replaced_task_or_null = checkAndReplaceOneTaskReference(do_var, task_vars, possible_other_task);
         if (replaced_task_or_null != NULL)
         {
             return_value = concateStringsWithNewlineInMiddle(return_value, replaced_task_or_null);
@@ -382,9 +386,12 @@ static int buildAndRunCmds(Do *do_var, char *namespace_vars, char *task_vars, ch
         Log(FATAL, "do_var is null");
         return 1;
     }
-    char *full_task_check_cmds = checkAndReplaceTaskReferences(do_var, task_cmds);
+    // char *task_with_vars = addVarsToCmds(task_vars, task_cmds);
+    // Log(FATAL, "%s", task_with_vars);
+    char *full_task_check_cmds = checkAndReplaceTaskReferences(do_var, task_vars, task_cmds);
     char *full_task_with_vars_check_cmds = addVarsToCmds(task_vars, full_task_check_cmds);
     char *full_task = addVarsToCmds(namespace_vars, full_task_with_vars_check_cmds);
+    // char *full_task = addVarsToCmds(namespace_vars, full_task_check_cmds);
 
     // Log(FATAL, "%s", full_task);
 
