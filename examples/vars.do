@@ -16,9 +16,24 @@ namespace main {
         }
     }
 
+    task no-vars {
+        cmds {
+            echo "${missing}"
+        }
+    }
+
+    task call-no-vars-with-local {
+        vars {
+            missing="no missing!"
+        }
+        cmds {
+            no-vars
+        }
+    }
+
     task with-brace {
         cmds {
-            echo "${x}"
+            echo "${x}" | tr '[:lower:]' '[:upper:]'
         }
     }
 }

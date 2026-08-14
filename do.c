@@ -38,7 +38,7 @@ extern void FreeDo(Do *do_var)
     {
         if (do_var->namespaces != NULL)
         {
-            Log(INFO, "freeing namespace from do with type: %d", do_var->namespaces->type);
+            Log(TRACE, "freeing namespace from do with type: %d", do_var->namespaces->type);
             FreeDoDynArray(do_var->namespaces);
         }
         free(do_var);
@@ -437,7 +437,7 @@ extern int RunDoTask(Do *do_var, char *namespace_colon_task)
     }
     else
     {
-        Log(DEBUG, "task %s is up to date, nothing to run!", target_task->name);
+        Log(INFO, "task %s is up to date, nothing to run!", target_task->name);
     }
 
     return task_return_code;

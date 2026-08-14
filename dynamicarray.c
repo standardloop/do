@@ -127,7 +127,7 @@ static void freeDoDynArrayValue(enum DoDynArrayTypes type, void *item)
     {
         return;
     }
-    Log(INFO, "freeDoDynArrayValue: %d", type);
+    Log(TRACE, "freeDoDynArrayValue: %d", type);
     if (type == DYN_ARR_TASK)
     {
         FreeDoTask((DoTask *)item);
@@ -144,7 +144,7 @@ static void freeDoDynArrayValue(enum DoDynArrayTypes type, void *item)
 
 static void freeDoDynArrayList(enum DoDynArrayTypes type, void **list, u_int32_t size, bool deep)
 {
-    Log(INFO, "entering freeDoDynArrayList with type: %d", type);
+    Log(TRACE, "entering freeDoDynArrayList with type: %d", type);
     if (list == NULL)
     {
         return;
@@ -161,7 +161,7 @@ static void freeDoDynArrayList(enum DoDynArrayTypes type, void **list, u_int32_t
 
 extern void FreeDoDynArray(DoDynArray *dynamic_array)
 {
-    Log(INFO, "entering FreeDoDynArray with array type: %d", dynamic_array->type);
+    Log(TRACE, "entering FreeDoDynArray with array type: %d", dynamic_array->type);
     if (dynamic_array != NULL)
     {
         if (dynamic_array->list != NULL)

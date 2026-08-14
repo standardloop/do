@@ -133,7 +133,7 @@ static DoNamespace *parseDoNamespace(DoParser *parser)
                     return NULL;
                 }
                 namespace->vars = ns_vars;
-                // Log(INFO, "%d", namespace->tasks->size);
+                // Log(TRACE, "%d", namespace->tasks->size);
             }
         }
         else if (parser->current_token->type == DoTokenTask)
@@ -148,9 +148,9 @@ static DoNamespace *parseDoNamespace(DoParser *parser)
             }
             else
             {
-                Log(INFO, "parsed a task, adding it to namespace->tasks");
+                Log(TRACE, "parsed a task, adding it to namespace->tasks");
                 DoDynArrayAddLast(namespace->tasks, (DoTask *)task);
-                // Log(INFO, "%d", namespace->tasks->size);
+                // Log(TRACE, "%d", namespace->tasks->size);
             }
         }
         nextDoToken(parser);
@@ -370,7 +370,7 @@ static Do *parse(DoParser *parser)
         }
         else if (parser->current_token->type == DoTokenNamespace)
         {
-            Log(INFO, "found a DoTokenNamespace to start parsing");
+            Log(TRACE, "found a DoTokenNamespace to start parsing");
             DoNamespace *namespace = parseDoNamespace(parser);
             if (namespace == NULL)
             {
@@ -379,7 +379,7 @@ static Do *parse(DoParser *parser)
             else
             {
                 DoDynArrayAddLast(do_var->namespaces, namespace);
-                Log(INFO, "finished parsing namespace adding to Do dyn array");
+                Log(TRACE, "finished parsing namespace adding to Do dyn array");
             }
         }
         nextDoToken(parser);
