@@ -19,30 +19,10 @@ namespace main {
     task download-dependency {
         check {
             set -e
-            otool -L /usr/local/lib/standardloop/libstandardloop-$DYLIB_NAME.dylib | head -n 2 | tail -n 1 | grep "current version $DYLIB_VERSION" >/dev/null 2>&1
+            otool -L /usr/local/lib/standardloop/libstandardloop-$DYLIB_NAME.dylib | head -n 2 | grep -q "current version $DYLIB_VERSION"
             DYLIB_NAME_UPPER_CASE=$(echo "$DYLIB_NAME" | tr '[:lower:]' '[:upper:]')
-            cat /usr/local/include/standardloop/$DYLIB_NAME.h | grep "STANDARDLOOP_${DYLIB_NAME_UPPER_CASE} \"$DYLIB_VERSION\""
-        }
-        cmds {
-            set -e
-            mkdir -p dependencies/tmp-$DYLIB_NAME
-            cd dependencies/tmp-$DYLIB_NAME
-            curl -O -J -L https://github.com/standardloop/$REPO_NAME/releases/download/v$DYLIB_VERSION/libstandardloop-$DYLIB_NAME.zip
-            unzip libstandardloop-$DYLIB_NAME.zip
-            sudo mkdir -p /usr/local/lib/standardloop/
-            sudo mkdir -p /usr/local/include/standardloop/
-            sudo mv libstandardloop-$DYLIB_NAME.dylib /usr/local/lib/standardloop/
-            sudo mv $DYLIB_NAME.h /usr/local/include/standardloop/ && rm libstandardloop-$DYLIB_NAME.zip
-            cd ../
-        }
-    }
-
-    task check-vars {
-        check {
-            set -e
-            otool -L /usr/local/lib/standardloop/libstandardloop-$DYLIB_NAME.dylib | head -n 2 | tail -n 1 | grep "current version $DYLIB_VERSION" >/dev/null 2>&1
-            DYLIB_NAME_UPPER_CASE=$(echo "$DYLIB_NAME" | tr '[:lower:]' '[:upper:]')
-            cat /usr/local/include/standardloop/$DYLIB_NAME.h | grep "STANDARDLOOP_${DYLIB_NAME_UPPER_CASE} \"$DYLIB_VERSION\""
+            DYLIB_NAME_UPPER_CASE="${DYLIB_NAME_UPPER_CASE}_H_VERSION"
+            cat /usr/local/include/standardloop/$DYLIB_NAME.h | grep -q "STANDARDLOOP_$DYLIB_NAME_UPPER_CASE \"$DYLIB_VERSION\""
         }
         cmds {
             set -e
@@ -112,13 +92,17 @@ namespace main {
     }
 
     task main {
+        check {
+            exit 1
+        }
         cmds {
+            echo "running main task"
             set -e
             dependencies
             $CC $CC_FLAGS \
                 main.c lexer.c parser.c do.c dynamicarray.c task.c namespace.c \
                 $DYN_LIBS_USED_PATH $DYN_LIBS_USED \
-                -o build/$EXECUTABLE_NAME
+                -o $EXECUTABLE_NAME
         }
     }
 
