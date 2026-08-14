@@ -269,12 +269,12 @@ static char *addVarsToCmds(char *vars, char *task_cmds)
     Log(DEBUG, "entering addVarsToCmds");
     if (vars == NULL)
     {
-        Log(DEBUG, "vars is NULL");
+        // Log(DEBUG, "vars is NULL");
         return QuickAllocatedString(task_cmds); // duplicate
     }
     if (task_cmds == NULL)
     {
-        return NULL;
+        return QuickAllocatedString(vars); // duplicate
     }
     char *concate_str = concateStringsWithNewlineInMiddle(vars, task_cmds);
 

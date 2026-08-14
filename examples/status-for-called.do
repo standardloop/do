@@ -1,4 +1,8 @@
 namespace main {
+
+    vars {
+        global="global"
+    }
     task main {
         vars {
             mainvars="mainvars"
@@ -6,6 +10,7 @@ namespace main {
         check {
             echo "$mainvars"
             echo "$testvars"
+            echo "$global"
         }
         cmds {
             echo "running task main"

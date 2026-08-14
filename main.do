@@ -58,6 +58,19 @@ namespace main {
         }
     }
 
+    task echo-vars {
+        check {
+            echo "$REPO_NAME"
+            echo "$DYLIB_VERSION"
+            echo "$DYLIB_NAME"
+        }
+        cmds {
+            echo "$REPO_NAME"
+            echo "$DYLIB_VERSION"
+            echo "$DYLIB_NAME"
+        }
+    }
+
     task logger-test {
         vars {
             REPO_NAME="c-logger"
@@ -65,7 +78,7 @@ namespace main {
             DYLIB_NAME="logger"
         }
         cmds {
-            check-vars
+            echo-vars
         }
     }
 
